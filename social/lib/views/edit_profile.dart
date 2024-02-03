@@ -87,9 +87,10 @@ class _EditingProfileState extends State<EditingProfile> {
       elevation: 0,
       title: Row(
         children: [
-          Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 24),),
-          const Icon(Icons.keyboard_arrow_down_sharp),
           Expanded(child: Container()),
+          Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 20),),
+          Expanded(child: Container()),
+          const Icon(Icons.add, color: Colors.black, size: 30,)
         ],
       ),
     );

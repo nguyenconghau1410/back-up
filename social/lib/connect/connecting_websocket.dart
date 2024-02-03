@@ -6,7 +6,7 @@ import 'package:stomp_dart_client/stomp_frame.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
 class ConnectWebSocket {
-  static String base_uri = "ws://192.168.9.11:8080";
+  static String base_uri = "ws://192.168.2.10:8080";
   static late StompClient stompClient;
   static void connectWS(String? email) async {
     String url = '$base_uri/ws/websocket';

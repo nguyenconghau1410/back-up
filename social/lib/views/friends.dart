@@ -38,7 +38,6 @@ class _FriendsState extends State<Friends> {
   }
 
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,7 +53,7 @@ class _FriendsState extends State<Friends> {
                   _friendController.getData(true, Utils.user!.id!);
                 },
                 child: Container(
-                  width: MediaQuery.of(context).size.width / 2,
+                  width: MediaQuery.of(context).size.width / 3,
                   height: 40,
                   decoration: BoxDecoration(
                       border: Border(
@@ -64,7 +63,7 @@ class _FriendsState extends State<Friends> {
                           )
                       )
                   ),
-                  child: Center(child: Text("Người theo dõi: ${follower.value}", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),)),
+                  child: Center(child: Text("Người theo dõi: ${follower.value}", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),)),
                 ),
               )),
               Obx(() => GestureDetector(
@@ -73,7 +72,7 @@ class _FriendsState extends State<Friends> {
                   _friendController.getData(false, Utils.user!.id!);
                 },
                 child: Container(
-                  width: MediaQuery.of(context).size.width / 2,
+                  width: MediaQuery.of(context).size.width / 3,
                   height: 40,
                   decoration: BoxDecoration(
                       border: Border(
@@ -83,9 +82,19 @@ class _FriendsState extends State<Friends> {
                           )
                       )
                   ),
-                  child: Center(child: Text("Đang theo dõi: ${following.value}", style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),)),
+                  child: Center(child: Text("Đang theo dõi: ${following.value}", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),)),
                 ),
               )),
+              GestureDetector(
+                onTap: () {
+
+                },
+                child: Container(
+                  width: MediaQuery.of(context).size.width / 3,
+                  height: 40,
+                  child: const Center(child: Text("Gợi ý kết bạn", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),)),
+                ),
+              )
             ],
           ),
           const SizedBox(height: 16,),

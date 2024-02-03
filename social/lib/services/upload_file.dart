@@ -5,23 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class FileUpload {
-  static Future<String?> uploadImage(File file) async {
+  static Future<String?> uploadImage(File file, String type) async {
     try {
       FirebaseStorage storage = FirebaseStorage.instance;
 
-      Reference ref = storage.ref().child("images");
+      Reference ref = storage.ref().child(type);
 
       UploadTask uploadTask = ref.putFile(file);
 
       TaskSnapshot snapshot = await uploadTask.whenComplete(() {
-        Get.snackbar(
-          "Upload file",
-          "Đã upload thành công",
-            duration: const Duration(seconds: 3),
-            snackPosition: SnackPosition.TOP,
-            colorText: Colors.white,
-            backgroundColor: Colors.black
-        );
       });
 
       String imageUrl = await snapshot.ref.getDownloadURL();

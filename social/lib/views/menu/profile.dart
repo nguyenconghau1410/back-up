@@ -6,12 +6,13 @@ import 'package:get/get.dart';
 import 'package:social/api/api_following.dart';
 import 'package:social/api/api_service.dart';
 import 'package:social/connect/connecting_websocket.dart';
-import 'package:social/models/following.dart';
 import 'package:social/services/following_controller.dart';
 import 'package:social/services/image_controller.dart';
 import 'package:social/services/upload_file.dart';
 import 'package:social/utils/constant.dart';
 import 'package:social/views/creating_posts.dart';
+import 'package:social/views/creating_shortcut.dart';
+import 'package:social/views/creating_story.dart';
 import 'package:social/views/edit_profile.dart';
 import 'package:social/views/friends.dart';
 import 'package:social/views/login_screen.dart';
@@ -40,9 +41,17 @@ class _ProfileState extends State<Profile> {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if(result != null) {
       File file = File(result.files.single.path!);
-      String? imageUrl = await FileUpload.uploadImage(file);
+      String? imageUrl = await FileUpload.uploadImage(file, "images-profile");
       Utils.user!.image = imageUrl;
       await APIService.updateUser(Utils.user!);
+      Get.snackbar(
+          "Upload file",
+          "Đã upload thành công",
+          duration: const Duration(seconds: 3),
+          snackPosition: SnackPosition.TOP,
+          colorText: Colors.white,
+          backgroundColor: Colors.black
+      );
       _imageController.loadImage(imageUrl!);
     }
     else {
@@ -85,7 +94,7 @@ class _ProfileState extends State<Profile> {
           Expanded(child: Container()),
           InkWell(
             onTap: () {
-              Get.to(() => const CreatingPosts());
+              _showServiceSelectionDialog(context);
             },
               child: const Icon(Icons.add_box_outlined, size: 32,)
           ),
@@ -350,6 +359,61 @@ class _ProfileState extends State<Profile> {
           Expanded(child: Container()),
         ],
       ),
+    );
+  }
+  void _showServiceSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.black,
+          shape: Border.all(
+            color: Colors.grey.withOpacity(0.5)
+          ),
+          title: const Center(child: Text('Tạo', style: TextStyle(color: Colors.white),)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Row(
+                  children: [
+                    Icon(Icons.post_add_outlined, color: Colors.white,),
+                    SizedBox(width: 20,),
+                    Text("Bài viết", style: TextStyle(color: Colors.white),)
+                  ],
+                ),
+                onTap: () {
+                  Get.to(() => const CreatingPosts()); // Đóng dialog
+                },
+              ),
+              ListTile(
+                title: const Row(
+                  children: [
+                    Icon(Icons.video_library_outlined, color: Colors.white,),
+                    SizedBox(width: 20,),
+                    Text("Thướt phim", style: TextStyle(color: Colors.white),)
+                  ],
+                ),
+                onTap: () {
+                   Get.to(() => const CreatingShortCut());
+                },
+              ),
+              ListTile(
+                title: const Row(
+                  children: [
+                    Icon(Icons.add_circle_outline_outlined, color: Colors.white,),
+                    SizedBox(width: 20,),
+                    Text("Tin", style: TextStyle(color: Colors.white),)
+                  ],
+                ),
+                onTap: () {
+                  Get.to(() => const CreatingStory());
+                },
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 }
