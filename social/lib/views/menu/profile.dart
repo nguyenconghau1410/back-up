@@ -12,10 +12,11 @@ import 'package:social/services/upload_file.dart';
 import 'package:social/utils/constant.dart';
 import 'package:social/views/creating_posts.dart';
 import 'package:social/views/creating_shortcut.dart';
-import 'package:social/views/creating_story.dart';
+import 'package:social/views/story_design.dart';
 import 'package:social/views/edit_profile.dart';
 import 'package:social/views/friends.dart';
 import 'package:social/views/login_screen.dart';
+import 'package:social/views/story_galary.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -407,7 +408,19 @@ class _ProfileState extends State<Profile> {
                   ],
                 ),
                 onTap: () {
-                  Get.to(() => const CreatingStory());
+                  Get.to(() => const StoryGallary());
+                },
+              ),
+              ListTile(
+                title: const Row(
+                  children: [
+                    Icon(Icons.design_services_outlined, color: Colors.white,),
+                    SizedBox(width: 20,),
+                    Text("Thiết kế tin", style: TextStyle(color: Colors.white),)
+                  ],
+                ),
+                onTap: () {
+                  Get.to(() => const StoryDesign());
                 },
               ),
             ],
