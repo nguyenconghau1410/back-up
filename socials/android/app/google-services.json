@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "291637604120",
+    "project_id": "znet-6536d",
+    "storage_bucket": "znet-6536d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:291637604120:android:11eff689eb4260efca786d",
+        "android_client_info": {
+          "package_name": "com.example.socials"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQgrNEqOXCYIUHNMoiRZdSpF_kuw3F0B4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
