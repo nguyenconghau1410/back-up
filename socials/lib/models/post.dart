@@ -16,11 +16,13 @@ class Post {
       this.modifiedAt, this.type, this.location, this.images);
   factory Post.fromJson(Map<String, dynamic> json) {
     List<Images> images = [];
-    for(int i = 0; i < json['images'].length; i++) {
-      images.add(Images.fromJson(json['images'][i]));
+    if(json['images'] != null) {
+      for(int i = 0; i < json['images'].length; i++) {
+        images.add(Images.fromJson(json['images'][i]));
+      }
     }
     return Post(json['id'], json['userid'], json['content'], json['status'],
-        json['src'], json['createdAt'], json['modifiedAt'], json['type'], json['location'],images);
+        json['src'], json['createdAt'], json['modifiedAt'], json['type'], json['location'], json['images'] != null ? images : null);
   }
 
   Map<String, dynamic> toJson() {

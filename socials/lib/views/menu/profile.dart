@@ -11,8 +11,11 @@ import 'package:socials/models/images.dart';
 import 'package:socials/services/following_controller.dart';
 import 'package:socials/services/image_controller.dart';
 import 'package:socials/services/upload_file.dart';
+import 'package:socials/shared_preferences/local_storage.dart';
 import 'package:socials/utils/constant.dart';
 import 'package:socials/views/all_posts.dart';
+import 'package:socials/views/all_short_cut.dart';
+import 'package:socials/views/all_stories.dart';
 import 'package:socials/views/creating_posts.dart';
 import 'package:socials/views/creating_shortcut.dart';
 import 'package:socials/views/display_story.dart';
@@ -21,8 +24,11 @@ import 'package:socials/views/edit_profile.dart';
 import 'package:socials/views/friends.dart';
 import 'package:socials/views/login_screen.dart';
 import 'package:socials/views/story_galary.dart';
+import 'package:video_player/video_player.dart';
 
+import '../../models/post_relation.dart';
 import '../../models/story.dart';
+import '../../utils/video_app.dart';
 import '../test.dart';
 
 class Profile extends StatefulWidget {
@@ -38,11 +44,13 @@ class _ProfileState extends State<Profile> {
   List<String> list = ["Ngọc Quỳnh", "Thanh Bình", "Hồng Phương", "Thúy Vân"];
   final ImageController _imageController = Get.put(ImageController());
   final FollowingController _followingController = Get.put(FollowingController());
+  List<VideoUtils> videos = [];
   @override
   void initState() {
     _imageController.imageUrl.value = Utils.user!.image == null
         ? "images/user.jpg" : Utils.user!.image!;
     _followingController.getData(Utils.user!.id!);
+    _getCountPost();
   }
 
   void uploadImage() async {
@@ -66,13 +74,23 @@ class _ProfileState extends State<Profile> {
       print("error");
     }
   }
-
+  Future<int> _getCountPost() async {
+    return await APIPosts.countByUserid(Utils.user!.id!);
+  }
   Future<List<Images>> _getImages() async {
     return APIImages.getByUserid(Utils.user!.id!);
   }
   Future<List<Story>> _getStory() async {
     return APIPosts.getStoryByUserid(Utils.user!.id!);
   }
+  Future<List<PostRelation>> _getShortCut() async {
+    // List<PostRelation> posts = await APIPosts.getAllShortCut(Utils.user!.id!);
+    // posts.forEach((element) {
+    //   videos.add(VideoUtils.src(element.post!.src!));
+    // });
+    return APIPosts.getAllShortCut(Utils.user!.id!);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,7 +113,7 @@ class _ProfileState extends State<Profile> {
                 Expanded(child: Container()),
                 InkWell(
                   onTap: () {
-
+                    Get.to(() => AllStory(user: Utils.user!,));
                   },
                   child: const Text("Xem tất cả", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500,),),
                 ),
@@ -122,7 +140,7 @@ class _ProfileState extends State<Profile> {
                           padding: const EdgeInsets.only(left: 16),
                           child: InkWell(
                             onTap: () {
-                              Get.to(() => DisplayStory(story: data[index]!,));
+                              Get.to(() => DisplayStory(story: data[index]!, user: Utils.user!,));
                             },
                             child: Column(
                               children: [
@@ -153,7 +171,7 @@ class _ProfileState extends State<Profile> {
                                       )
                                   ],
                                 ),
-                                Text(Utils.formatDateToddmmyy(data[index]!.createdAt!), style: TextStyle(color: Colors.grey, fontFamily: "Arizonia-Regular"),)
+                                Text(Utils.formatDateToddmmyy(data[index]!.createdAt!), style: const TextStyle(color: Colors.grey, fontFamily: "Arizonia-Regular"),)
                               ],
                             ),
                           ),
@@ -175,14 +193,22 @@ class _ProfileState extends State<Profile> {
             Obx(() {
               bool isDisplay = isItemObx.value;
               if(isDisplay) {
+                if(videos.isNotEmpty) {
+                  videos.forEach((element) {
+                    element.dispose();
+                  });
+                  videos = [];
+                  print(videos);
+                }
+                print(videos.length);
                 return FutureBuilder(
                   future: _getImages(),
                   builder: (context, snapshot) {
                     if(snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
+                      return const Center(child: CircularProgressIndicator(),);
                     }
                     else if(snapshot.hasError) {
-                      return const CircularProgressIndicator();
+                      return const Center(child: CircularProgressIndicator(),);
                     }
                     else {
                       final data = snapshot.data;
@@ -202,7 +228,32 @@ class _ProfileState extends State<Profile> {
                 );
               }
               else {
-                return Container();
+                return FutureBuilder(
+                  future: _getShortCut(),
+                  builder: (context, snapshot) {
+                    if(snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(),);
+                    }
+                    else if(snapshot.hasError) {
+                      return const Center(child: CircularProgressIndicator(),);
+                    }
+                    else {
+                      final data = snapshot.data;
+                      return Container(
+                        child: GridView.count(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 3,
+                          crossAxisSpacing: 3,
+                          shrinkWrap: true,
+                          children: List.generate(data!.length, (index) {
+                            videos.add(VideoUtils.src(data[index].post!.src!));
+                            return _buildVideos(videos.last);
+                          }),
+                        ),
+                      );
+                    }
+                  },
+                );
               }
             }),
           ],
@@ -228,10 +279,11 @@ class _ProfileState extends State<Profile> {
           InkWell(
             onTap: () {
               ConnectWebSocket.onDisconnect(Utils.user!.email);
-              Get.offAll(const LoginScreen());
+              LocalStorage.deleteUser();
+              Get.offAll(() => const LoginScreen());
             },
             child: const Icon(Icons.logout, size: 28,),
-          )
+          ),
         ],
       ),
     );
@@ -259,12 +311,22 @@ class _ProfileState extends State<Profile> {
                 ),
               ),
               const SizedBox(height: 5,),
-              Text(Utils.user!.title!, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500, fontFamily: 'Roboto'),)
+              Text(Utils.user!.title ?? "", style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500, fontFamily: 'Roboto'),)
             ],
           ),
         ),
         Expanded(child: Container()),
-        _itemComponent1(0, "Bài viết"),
+        FutureBuilder(
+          future: _getCountPost(),
+          builder: (context, snapshot) {
+            final data = snapshot.data;
+            return Row(
+              children: [
+                _itemComponent1(data ?? 0, "Bài viết")
+              ],
+            );
+          },
+        ),
         Obx(() {
           final isFollowing = _followingController.isFollowing.value;
           final beingFollewed = _followingController.beingFollowed.value;
@@ -361,7 +423,7 @@ class _ProfileState extends State<Profile> {
     return InkWell(
       onTap: () {
         if(text != "Bài viết") {
-          Get.to(() => const Friends());
+          Get.to(() => Friends(user: Utils.user!,));
         }
       },
       child: Container(
@@ -398,7 +460,7 @@ class _ProfileState extends State<Profile> {
             Get.to(() => const EditingProfile());
           }
           else {
-            Get.to(() => const Test());
+
           }
         },
         child: Text(
@@ -569,5 +631,24 @@ class _ProfileState extends State<Profile> {
         fit: BoxFit.cover,
       ),
     );
+  }
+
+  Widget _buildVideos(VideoUtils videoUtils) {
+    return InkWell(
+      onTap: () {
+        Get.to(() => AllShortCut(user: Utils.user!));
+      },
+      child: VideoPlayer(videoUtils.controller),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if(videos.isNotEmpty) {
+      videos.forEach((element) {
+        element.dispose();
+      });
+    }
   }
 }

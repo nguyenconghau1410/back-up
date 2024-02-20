@@ -5,10 +5,12 @@ import 'package:socials/utils/video_app.dart';
 import 'package:video_player/video_player.dart';
 
 import '../models/story.dart';
+import '../models/user.dart';
 
 class DisplayStory extends StatefulWidget {
+  User user;
   Story story;
-  DisplayStory({super.key, required this.story});
+  DisplayStory({super.key, required this.story, required this.user});
 
   @override
   State<DisplayStory> createState() => _DisplayStoryState();
@@ -138,16 +140,16 @@ class _DisplayStoryState extends State<DisplayStory> with SingleTickerProviderSt
                       ),
                       child: ClipRRect(
                           borderRadius: BorderRadius.circular(30),
-                          child: Utils.user!.image! == null
+                          child: widget.user.image == null
                               ? Image.asset("images/user.jpg", width: 60, height: 60, fit: BoxFit.fill,)
-                              : Image.network(Utils.user!.image!, width: 60, height: 60, fit: BoxFit.fill,)
+                              : Image.network(widget.user.image!, width: 60, height: 60, fit: BoxFit.fill,)
                       ),
                     ),
                     const SizedBox(width: 16,),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(Utils.user!.name!, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),),
+                        Text(widget.user.name!, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),),
                         const SizedBox(height: 10,),
                         Text(Utils.formatDateToddmmyy(widget.story.createdAt!), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black ,fontFamily: "Arizonia-Regular"),)
                       ],

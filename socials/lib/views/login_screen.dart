@@ -8,6 +8,7 @@ import 'package:socials/views/menu/dashboard.dart';
 import 'package:socials/views/register_screen.dart';
 
 import '../models/user.dart';
+import '../shared_preferences/local_storage.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -36,6 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.black,
       );
       Utils.user = auth;
+      LocalStorage.saveUser(Utils.user!.email!);
       Future.delayed(const Duration(seconds: 3), () {
         Get.off(() => const DashBoard());
       });
@@ -232,22 +234,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      const Text("Or", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Are you an Admin ?",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          TextButton(
-                            onPressed: () {
-
-                            },
-                            child: const Text("Click Here", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
-                          ),
-                        ],
-                      )
                     ],
                   ),
                 ),

@@ -11,14 +11,10 @@ import 'package:lindi_sticker_widget/lindi_controller.dart';
 import 'package:lindi_sticker_widget/lindi_sticker_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:socials/api/api_posts.dart';
-import 'package:socials/models/post.dart';
 import 'package:socials/models/story.dart';
 import 'package:socials/services/upload_file.dart';
 import 'package:socials/utils/constant.dart';
-import 'package:socials/views/test.dart';
 import 'package:text_editor/text_editor.dart';
-
-import '../models/images.dart';
 import 'menu/dashboard.dart';
 
 
@@ -108,8 +104,10 @@ class _StoryDesignState extends State<StoryDesign> {
     File tempFile = File("${tempDir.path}/${DateTime.now().toString()}.jpg");
     tempFile.writeAsBytesSync(saveImage!);
     Future.delayed(const Duration(seconds: 2)).then((_) => Get.offAll(() => const DashBoard()));
-    String? src = await FileUpload.uploadImage(tempFile, "stories", "${Utils.user!.name}-${DateTime.now().toString()}-design");
-    Story story = Story(null, Utils.user!.id!, "Public", src, null, DateTime.now().toString(), null);
+    String filename = "${Utils.user!.name}-${DateTime.now().toString()}-design";
+    String? src = await FileUpload.uploadImage(tempFile, "stories", filename);
+    Story story = Story(null, Utils.user!.id!, "Public", src, null,
+        "stories/$filename" ,DateTime.now().toString(), null);
     await APIPosts.createStory(story);
   }
 
@@ -221,6 +219,7 @@ class _StoryDesignState extends State<StoryDesign> {
                       TextButton(
                         onPressed: () {
                           _saveChanged();
+                          Get.back();
                         },
                         child: const Text("Xác nhận"),
                       ),

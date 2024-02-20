@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:socials/connect/connecting_websocket.dart';
+import 'package:socials/api/api_posts.dart';
+import 'package:socials/models/images.dart';
+import 'package:socials/models/story.dart';
+import 'package:socials/models/story_relation.dart';
+import 'package:socials/services/post_controller.dart';
 import 'package:socials/utils/constant.dart';
+import 'package:socials/views/display_story.dart';
 import 'package:socials/views/messenger_screen.dart';
+import 'package:socials/views/others_profile.dart';
+
+import '../../models/favorite.dart';
+import '../../models/post_relation.dart';
+import '../comment_screen.dart';
+import '../story_design.dart';
+import '../story_galary.dart';
+import '../view_image.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,12 +26,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<String> images = ["111.jpg", "111.jpg"];
-  List<String> list = ["myStory" ,"user1", "user2", "user3", "user4"];
+  List<PostController> postControllers = [];
   @override
   void initState() {
     super.initState();
-    ConnectWebSocket.connectWS(Utils.user!.email);
+  }
+
+  Future<List<StoryRelation>> getStoryOfFriends() async {
+    return APIPosts.getStoryOfFriends(Utils.user!.id!);
+  }
+
+  Future<void> getOtherPost() async {
+    List<PostRelation> post = await APIPosts.getOtherPost(Utils.user!.id!);
+    List<PostController> list = [];
+    post.forEach((element) {
+      PostController postController = PostController();
+      postController.init(element, Utils.user!.id!);
+      list.add(postController);
+    });
+    postControllers = list;
   }
 
   @override
@@ -28,23 +54,66 @@ class _HomePageState extends State<HomePage> {
       appBar: _appBar(),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(list.length, (index) {
-                  if(index == 0) {
-                    return _myStory("user.jpg");
+              child: FutureBuilder(
+                future: getStoryOfFriends(),
+                builder: (context, snapshot) {
+                  if(snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(),);
+                  }
+                  else if(snapshot.hasError) {
+                    print("cc");
+                    return const Center(child: CircularProgressIndicator(),);
                   }
                   else {
-                    return _story(list[index], "login.jpg");
+                    final data = snapshot.data;
+                    data!.insert(0, StoryRelation(null, null));
+                    return Row(
+                      children: List.generate(data.length, (index) {
+                        if(index == 0) {
+                          return _myStory();
+                        }
+                        else {
+                          return _story(data[index]);
+                        }
+                      }),
+                    );
                   }
-                }),
+                },
               ),
             ),
             const SizedBox(height: 20,),
-            Column(
-              children: List.generate(images.length, (index) => _buildPost(images)),
+            FutureBuilder(
+              future: getOtherPost(),
+              builder: (context, snapshot) {
+                if(snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(),);
+                }
+                else if(snapshot.hasError) {
+                  return const Center(child: CircularProgressIndicator(),);
+                }
+                else {
+                  return postControllers.isNotEmpty
+                    ? Column(
+                        children: List.generate(postControllers.length, (index) => _buildPost(postControllers[index])),
+                      )
+                    : const Padding(
+                        padding: EdgeInsets.only(top: 50),
+                        child: Center(
+                          child: Text(
+                            "Hãy theo dõi người khác để xem bài viết của họ",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16
+                            ),
+                          ),
+                        ),
+                      );
+                }
+              },
             )
           ],
         ),
@@ -64,7 +133,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(width: 25,),
           InkWell(
             onTap: () {
-              Get.to(const MessengerScreen());
+              Get.to(() => const MessengerScreen());
             },
             child: const Icon(FontAwesomeIcons.facebookMessenger,),
           ),
@@ -73,7 +142,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  Widget _buildPost(List<String> images) {
+  Widget _buildPost(PostController post) {
     return Container(
       decoration: const BoxDecoration(
           border: Border(
@@ -95,16 +164,28 @@ class _HomePageState extends State<HomePage> {
             Row(
               children: [
                 const SizedBox(width: 10,),
-                ClipOval(
-                  child: Image.asset(
-                    "images/login.jpg",
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.fill,
+                InkWell(
+                  onTap: () {
+                    Get.to(() => OthersProfile(user: post.postRelation!.user!));
+                  },
+                  child: ClipOval(
+                    child: post.postRelation!.user!.image == null
+                        ? Image.asset(
+                      "images/login.jpg",
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.fill,
+                    )
+                        : Image.network(post.postRelation!.user!.image!, width: 40, height: 40, fit: BoxFit.fill,),
                   ),
                 ),
                 const SizedBox(width: 10,),
-                const Text("Barcelona FC", style: TextStyle(color: Colors.white),),
+                InkWell(
+                  onTap: () {
+                    Get.to(() => OthersProfile(user: post.postRelation!.user!));
+                  },
+                  child: Text(post.postRelation!.user!.name!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),),
+                ),
                 Expanded(child: Container()),
                 const Icon(Icons.more_vert, color: Colors.white, size: 24,)
               ],
@@ -115,10 +196,10 @@ class _HomePageState extends State<HomePage> {
               child: RichText(
                 text: TextSpan(
                     style: DefaultTextStyle.of(context).style,
-                    children: const [
+                    children: [
                       TextSpan(
-                          text: "This is a beautiful girl",
-                          style: TextStyle(
+                          text: post.postRelation!.post!.content!,
+                          style: const TextStyle(
                               fontSize: 16,
                               color: Colors.white
                           )
@@ -132,26 +213,46 @@ class _HomePageState extends State<HomePage> {
                 constraints: const BoxConstraints(
                     maxHeight: 450
                 ),
-                child: _buildListImages(images)
+                child: _buildListImages(post.postRelation!.post!.images!)
             ),
-            const Padding(
-              padding: EdgeInsets.only(left: 10, top: 30),
+            Padding(
+              padding: const EdgeInsets.only(left: 10, top: 30),
               child: Row(
                 children: [
-                  Icon(Icons.favorite_outline_rounded, color: Colors.white, size: 30,),
-                  SizedBox(width: 20,),
-                  Icon(FontAwesomeIcons.commentDots, color: Colors.white, size: 30,),
-                  SizedBox(width: 20,),
-                  Icon(Icons.share, color: Colors.white, size: 30,)
+                  Obx(
+                          () => InkWell(
+                        onTap: () {
+                          post.onChanged(Favorite(null, Utils.user!.id!, post.postRelation!.post!.id));
+                        },
+                        child: post.clicked.value
+                            ? const Icon(Icons.favorite, color: Colors.red, size: 24,)
+                            : const Icon(Icons.favorite_outline_rounded, color: Colors.white, size: 24,),
+                      )
+                  ),
+                  const SizedBox(width: 20,),
+                  InkWell(
+                    onTap: () {
+                      Get.to(() => CommentScreen(post: post.postRelation!.post!,));
+                    },
+                    child: const Icon(FontAwesomeIcons.commentDots, color: Colors.white, size: 24,),
+                  ),
+                  const SizedBox(width: 20,),
+                  const Icon(Icons.share, color: Colors.white, size: 24,)
                 ],
               ),
+            ),
+            Obx(
+                    () => Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: Text("${post.quantityLike.value} lượt thích", style: const TextStyle(color: Colors.white),)
+                )
             )
           ],
         ),
       ),
     );
   }
-  Widget _buildListImages(List<String> list) {
+  Widget _buildListImages(List<Images> list) {
     return ListView.builder(
       shrinkWrap: true,
       scrollDirection: Axis.horizontal,
@@ -159,90 +260,150 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context, index) {
         int cnt = list.length;
         int i = index + 1;
-        return Stack(
-          children: [
-            _buildImage(list[index]),
-            Positioned(
-              top: 5,
-              right: 10,
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
-                child: Text(cnt == 1 ? "" : "$i/$cnt", style: const TextStyle(color: Colors.white),),
-              ),
-            )
-          ],
+        return InkWell(
+          onTap: () {
+            Get.to(() => ViewImage(images: list));
+          },
+          child: Stack(
+            children: [
+              _buildImage(list[index]),
+              Positioned(
+                top: 5,
+                right: 10,
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                  child: Text(cnt == 1 ? "" : "$i/$cnt", style: const TextStyle(color: Colors.white),),
+                ),
+              )
+            ],
+          ),
         );
       },
     );
   }
-  Widget _buildImage(String text) {
-    return Image.asset(
-      "images/$text",
-      width: MediaQuery.of(context).size.width,
-      height: 450,
-      fit: BoxFit.cover,
+  Widget _buildImage(Images images) {
+    return Image.network(
+      images!.image!,
+      width: MediaQuery.of(context).size.width, fit: BoxFit.fill,
     );
   }
-  Widget _story(String name, String path) {
+  Widget _story(StoryRelation story) {
     return Padding(
       padding: const EdgeInsets.only(left: 20, top: 20),
       child: InkWell(
         borderRadius: BorderRadius.circular(35),
         onTap: () {
-
+          Get.to(() => DisplayStory(story: story.story!, user: story.user!,));
         },
         child: Column(
           children: [
-            ClipOval(
-              child: Image.asset(
-                "images/$path",
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-              ),
+            Stack(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: Colors.grey)
+                  ),
+                ),
+                story.story!.src_image != null
+                ? Positioned(
+                  top: 5,
+                  left: 5,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(35),
+                    child: Image.network(story.story!.src_image!, width: 70, height: 70, fit: BoxFit.cover,),
+                  ),
+                )
+                : const Positioned(
+                  top: 30,
+                  left: 30,
+                  child: Center(child: Icon(Icons.play_arrow, color: Colors.grey,),),
+                )    
+              ],
             ),
             const SizedBox(height: 10,),
-            Text(name, style: const TextStyle(fontSize: 16, color: Colors.white,),)
+            Text(story.user!.name!, style: const TextStyle(fontSize: 16, color: Colors.white,),)
           ],
         ),
       ),
     );
   }
-  Widget _myStory(String image) {
+  Widget _myStory() {
     return Padding(
       padding: const EdgeInsets.only(left: 18, top: 20),
       child: Row(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(35),
+            borderRadius: BorderRadius.circular(40),
             onTap: () {
-
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      backgroundColor: Colors.black,
+                      shape: Border.all(
+                          color: Colors.grey.withOpacity(0.5)
+                      ),
+                      title: const Center(child: Text('Tạo', style: TextStyle(color: Colors.white),)),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            title: const Row(
+                              children: [
+                                Icon(Icons.add_circle_outline_outlined, color: Colors.white,),
+                                SizedBox(width: 20,),
+                                Text("Tin", style: TextStyle(color: Colors.white),)
+                              ],
+                            ),
+                            onTap: () {
+                              Get.to(() => const StoryGallary());
+                            },
+                          ),
+                          ListTile(
+                            title: const Row(
+                              children: [
+                                Icon(Icons.design_services_outlined, color: Colors.white,),
+                                SizedBox(width: 20,),
+                                Text("Thiết kế tin", style: TextStyle(color: Colors.white),)
+                              ],
+                            ),
+                            onTap: () {
+                              Get.to(() => const StoryDesign());
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+              );
             },
             child: Column(
               children: [
                 Stack(
                   children: [
-                    ClipOval(
-                      child: Image.asset(
-                        "images/$image",
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                      ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(40),
+                      child: Utils.user!.image == null
+                        ? Image.asset("images/user.jpg", width: 80, height: 80, fit: BoxFit.fill,)
+                        : Image.network(Utils.user!.image!, width: 80, height: 80, fit: BoxFit.fill),
                     ),
                     Positioned(
                       bottom: 0,
-                      right: 8,
+                      right: 9,
                       child: Image.asset(
                         "images/add.png",
-                        width: 25,
-                        height: 25,
+                        width: 20,
+                        height: 20,
                       ),
                     )
                   ],
                 ),
                 const SizedBox(height: 10,),
-                const Text("Tin của bạn", style: TextStyle(fontSize: 16, color: Colors.white,),)
+                const Text("Thêm tin", style: TextStyle(fontSize: 16, color: Colors.white,),)
               ],
             ),
           ),

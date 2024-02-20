@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:get/get.dart';
 import 'package:socials/views/creating_posts.dart';
 
+import '../models/chat_message.dart';
 import '../models/following.dart';
 import '../models/user.dart';
 
@@ -25,7 +27,6 @@ class Utils {
       'Roboto-Regular'
     ];
   }
-
   static Future<FileUtils?> loadImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
     if(result != null) {

@@ -48,13 +48,13 @@ class APIFavorite {
     try {
       final response = await http.post(
         Uri.parse("${Utils.baseURL}/comments/add-node-0"),
-        headers: {
-          'Content-Type': "application/json"
-        },
+          headers: {
+            "Content-Type": "application/json"
+          },
         body: json.encode(comment.toJson())
       );
       if(response.statusCode == 200) {
-        return Comment.fromJson(json.decode(response.body));
+        return Comment.fromJson(json.decode(utf8.decode(response.bodyBytes)));
       }
       else {
         print(response.statusCode);
@@ -72,7 +72,7 @@ class APIFavorite {
       );
       if(response.statusCode == 200) {
         List<Comment> comments = [];
-        List<dynamic> data = json.decode(response.body);
+        List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         data.forEach((element) {
           comments.add(Comment.fromJson(element));
         });

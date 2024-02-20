@@ -11,17 +11,17 @@ import 'package:socials/views/recommendation_friends.dart';
 import '../models/friend.dart';
 import '../models/user.dart';
 
-class Friends extends StatefulWidget {
+class OtherFriends extends StatefulWidget {
   User user;
-  Friends({super.key, required this.user});
+  OtherFriends({super.key, required this.user});
 
   @override
-  State<Friends> createState() => _FriendsState();
+  State<OtherFriends> createState() => _OtherFriendsState();
 }
 
-class _FriendsState extends State<Friends> {
+class _OtherFriendsState extends State<OtherFriends> {
 
-  final _friendController = Get.put(FriendsController());
+  final _friendController = FriendsController();
 
   var isDisplay = true.obs;
   var following = 0.obs, follower = 0.obs;
@@ -34,7 +34,7 @@ class _FriendsState extends State<Friends> {
     _friendController.getData(isDisplay.value, widget.user.id!);
   }
 
-  
+
   Future<void> fetch() async {
     following.value = (await APIFollowing.getListUserIsFollowed(widget.user.id!)).length;
     follower.value = (await APIFollowing.getListUserIsFollowing(widget.user.id!)).length;
@@ -45,7 +45,7 @@ class _FriendsState extends State<Friends> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: _appBar(widget.user.name!),
+      appBar: _appBar(Utils.user!.name!),
       body: Column(
         children: [
           Row(
@@ -53,10 +53,10 @@ class _FriendsState extends State<Friends> {
               Obx(() => GestureDetector(
                 onTap: () {
                   isDisplay.value = true;
-                  _friendController.getData(true, Utils.user!.id!);
+                  _friendController.getData(true, widget.user.id!);
                 },
                 child: Container(
-                  width: MediaQuery.of(context).size.width / 3,
+                  width: MediaQuery.of(context).size.width / 2,
                   height: 40,
                   decoration: BoxDecoration(
                       border: Border(
@@ -72,10 +72,10 @@ class _FriendsState extends State<Friends> {
               Obx(() => GestureDetector(
                 onTap: () {
                   isDisplay.value = false;
-                  _friendController.getData(false, Utils.user!.id!);
+                  _friendController.getData(false, widget.user.id!);
                 },
                 child: Container(
-                  width: MediaQuery.of(context).size.width / 3,
+                  width: MediaQuery.of(context).size.width / 2,
                   height: 40,
                   decoration: BoxDecoration(
                       border: Border(
@@ -88,16 +88,6 @@ class _FriendsState extends State<Friends> {
                   child: Center(child: Text("Đang theo dõi: ${following.value}", style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),)),
                 ),
               )),
-              GestureDetector(
-                onTap: () {
-                  Get.to(() => const RecommendFriends());
-                },
-                child: Container(
-                  width: MediaQuery.of(context).size.width / 3,
-                  height: 40,
-                  child: const Center(child: Text("Gợi ý kết bạn", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),)),
-                ),
-              )
             ],
           ),
           const SizedBox(height: 16,),
@@ -178,8 +168,8 @@ class _FriendsState extends State<Friends> {
             ClipRRect(
               borderRadius: BorderRadius.circular(30),
               child: friend.user!.image == null
-                    ? Image.asset("images/user.jpg", width: 60, height: 60,fit: BoxFit.fill)
-                    : Image.network(friend.user!.image!, width: 60, height: 60, fit: BoxFit.fill,),
+                  ? Image.asset("images/user.jpg", width: 60, height: 60,fit: BoxFit.fill)
+                  : Image.network(friend.user!.image!, width: 60, height: 60, fit: BoxFit.fill,),
             ),
             const SizedBox(width: 20,),
             Column(

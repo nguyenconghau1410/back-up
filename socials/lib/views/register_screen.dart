@@ -102,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     validator: (val) => val == "" ? "Please write your name" : null,
                                     decoration: InputDecoration(
                                       prefixIcon: const Icon(
-                                        Icons.email,
+                                        Icons.person,
                                         color: Colors.black,
                                       ),
                                       hintText: "name...",

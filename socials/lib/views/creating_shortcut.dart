@@ -83,7 +83,9 @@ class _CreatingShortCutState extends State<CreatingShortCut> {
                 if(snapshot.connectionState == ConnectionState.done) {
                   return Container(
                     width: MediaQuery.of(context).size.width,
-                    height: 500,
+                    constraints: const BoxConstraints(
+                      maxHeight: 500
+                    ),
                     child: Obx(
                             () => Stack(
                           children: [

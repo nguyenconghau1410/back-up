@@ -13,7 +13,7 @@ class APIFollowing {
         Uri.parse('${Utils.baseURL}/following/get-userid/$userId')
       );
       if(response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
+        List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         List<Following> list = [];
         data.forEach((element) {
           list.add(Following.fromJson(element));
@@ -32,7 +32,7 @@ class APIFollowing {
           Uri.parse('${Utils.baseURL}/following/get-following/$followId')
       );
       if(response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
+        List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         List<Following> list = [];
         data.forEach((element) {
           list.add(Following.fromJson(element));
@@ -52,7 +52,7 @@ class APIFollowing {
         Uri.parse("${Utils.baseURL}/following/get-listUserIsFollowing/$followId")
       );
       if(response.statusCode == 200) {
-        List<dynamic> list = json.decode(response.body);
+        List<dynamic> list = json.decode(utf8.decode(response.bodyBytes));
         List<User> users = [];
         list.forEach((element) {
           users.add(User.fromJson(element));
@@ -73,7 +73,7 @@ class APIFollowing {
           Uri.parse("${Utils.baseURL}/following/get-listUserIsFollowed/$userid")
       );
       if(response.statusCode == 200) {
-        List<dynamic> list = json.decode(response.body);
+        List<dynamic> list = json.decode(utf8.decode(response.bodyBytes));
         List<User> users = [];
         list.forEach((element) {
           users.add(User.fromJson(element));

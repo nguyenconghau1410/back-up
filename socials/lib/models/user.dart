@@ -10,11 +10,14 @@ class User {
   String? title;
   String? image;
   String? status;
+  String? lastOut;
   Role? role;
 
   User(
       {this.id, this.email, this.name, this.password, this.dob, this.gender, this.title,
-        this.image, this.status, this.role});
+        this.image, this.status, this.lastOut,this.role});
+  User.other(this.id, this.email, this.name, this.password, this.dob, this.gender, this.title,
+      this.image, this.status, this.lastOut,this.role);
   User.auth(this.email, this.password);
   User.register(this.email, this.name, this.password);
 
@@ -28,7 +31,12 @@ class User {
     title = json['title'];
     image = json['image'];
     status = json['status'];
+    lastOut = json['lastOut'];
     role = json['role'] != null ? Role.fromJson(json['role']) : null;
+  }
+  factory User.fromJson1(Map<String, dynamic> json) {
+    return User.other(json['id'], json['email'], json['name'], null, json['dob'],
+        json['gender'], json['title'], json['image'], json['status'], json['lastOut'], json['role'] != null ? Role.fromJson(json['role']) : null);
   }
 
   Map<String, dynamic> toJson() {

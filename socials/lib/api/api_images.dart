@@ -11,7 +11,7 @@ class APIImages {
       );
       if(response.statusCode == 200) {
         List<Images> images = [];
-        List<dynamic> data = json.decode(response.body);
+        List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
         data.forEach((element) {
           images.add(Images.fromJson(element));
         });

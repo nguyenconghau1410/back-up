@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socials/models/post.dart';
+import 'package:socials/models/user.dart';
 
 import 'favorite.dart';
 

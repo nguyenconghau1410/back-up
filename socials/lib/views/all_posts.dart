@@ -2,11 +2,11 @@ import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:socials/api/api_posts.dart';
 import 'package:socials/models/favorite.dart';
 import 'package:socials/models/post_relation.dart';
 import 'package:socials/views/comment_screen.dart';
+import 'package:socials/views/view_image.dart';
 
 import '../models/images.dart';
 import '../models/post.dart';
@@ -183,7 +183,8 @@ class _AllPostsState extends State<AllPosts> {
       ),
     );
   }
-  Widget _buildListImages(List<Images> list) {
+  Widget _buildListImages(List<Images> list)
+  {
     return ListView.builder(
       shrinkWrap: true,
       scrollDirection: Axis.horizontal,
@@ -191,23 +192,28 @@ class _AllPostsState extends State<AllPosts> {
       itemBuilder: (context, index) {
         int cnt = list.length;
         int i = index + 1;
-        return Stack(
-          children: [
-            _buildImage(list[index].image!),
-            Positioned(
-              top: 5,
-              right: 10,
-              child: Container(
-                width: 30,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(20)
+        return InkWell(
+          onTap: () {
+            Get.to(() => ViewImage(images: list));
+          },
+          child: Stack(
+            children: [
+              _buildImage(list[index].image!),
+              Positioned(
+                top: 5,
+                right: 10,
+                child: Container(
+                  width: 30,
+                  height: 20,
+                  decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20)
+                  ),
+                  child: Center(child: Text(cnt == 1 ? "" : "$i/$cnt", style: const TextStyle(color: Colors.white),),),
                 ),
-                child: Center(child: Text(cnt == 1 ? "" : "$i/$cnt", style: const TextStyle(color: Colors.white),),),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         );
       },
     );

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:socials/api/api_service.dart';
+import 'package:socials/models/chat_relation.dart';
+import 'package:socials/services/chat_room_controller.dart';
+import 'package:socials/utils/constant.dart';
 import 'package:socials/views/chat_room.dart';
+import 'package:socials/views/search_screen.dart';
+
+import '../models/user.dart';
 
 class MessengerScreen extends StatefulWidget {
   const MessengerScreen({super.key});
@@ -11,12 +18,23 @@ class MessengerScreen extends StatefulWidget {
 }
 
 class _MessengerScreenState extends State<MessengerScreen> {
-  final _controller = TextEditingController();
+  ChatRoomController _chatRoomController = Get.put(ChatRoomController());
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+  Future<void> loadData() async {
+    await _chatRoomController.init(Utils.user!.id!);
+  }
+  Future<List<User>> getUserConnected() {
+    return APIService.getUsersConnected(Utils.user!);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: _appBar("nvh1410"),
+      appBar: _appBar(Utils.user!.name!),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(left: 18),
@@ -25,32 +43,34 @@ class _MessengerScreenState extends State<MessengerScreen> {
             children: [
               const SizedBox(height: 20,),
               TextFormField(
-                controller: _controller,
+                onTap: () {
+                  Get.to(() => const SearchScreen());
+                },
                 style: const TextStyle(fontSize: 18, color: Colors.white),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(FontAwesomeIcons.search, color: Colors.grey,),
+                  prefixIcon: const Icon(FontAwesomeIcons.search, color: Colors.grey, size: 20,),
                   hintText: "Tìm kiếm",
                   hintStyle: const TextStyle(color: Colors.grey),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(
                         color: Colors.black,
                       )
                   ),
                   enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(
                         color: Colors.black,
                       )
                   ),
                   focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(
                         color: Colors.black,
                       )
                   ),
                   disabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(
                         color: Colors.black,
                       )
@@ -72,29 +92,46 @@ class _MessengerScreenState extends State<MessengerScreen> {
                     onTap: () {
 
                     },
-                      child: const Text("Xem tất cả", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w400, fontSize: 18),)
+                      child: const Text("Xem tất cả", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w400, fontSize: 16),)
                   )
                 ],
               ),
               const SizedBox(height: 15,),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: List.generate(6, (index) {
-                    if(index == 0) {
-                      return _me("");
+                child: FutureBuilder(
+                  future: getUserConnected(),
+                  builder: (context, snapshot) {
+                    if(snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(),);
+                    }
+                    else if(snapshot.hasError) {
+                      return const Center(child: CircularProgressIndicator(),);
                     }
                     else {
-                      return _others("");
+                      final data = snapshot.data;
+                      print(data!.length);
+                      return Row(
+                        children: List.generate(data!.length + 1, (index) {
+                          if(index == 0) {
+                            return _me();
+                          }
+                          else {
+                            return _others(data[index - 1]);
+                          }
+                        }),
+                      );
                     }
-                  }),
+                  },
                 ),
               ),
               const SizedBox(height: 15,),
               const Text("Tin nhắn", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 20),),
               const SizedBox(height: 20,),
-              Column(
-                children: List.generate(2, (index) => _message("user.jpg", "user 1", "......")),
+              Obx(
+                      () => Column(
+                    children: List.generate(_chatRoomController.rooms.length, (index) => _message(_chatRoomController.rooms[index])),
+                  )
               )
             ],
           ),
@@ -109,36 +146,61 @@ class _MessengerScreenState extends State<MessengerScreen> {
       elevation: 0,
       title: Row(
         children: [
-          Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 24),),
-          const Icon(Icons.keyboard_arrow_down_sharp),
+          Text(text, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 20),),
           Expanded(child: Container()),
           const Icon(Icons.video_call_outlined, size: 40,),
           const SizedBox(width: 30,),
-          const Icon(FontAwesomeIcons.penToSquare, size: 30,)
+          const Icon(FontAwesomeIcons.penToSquare, size: 24,)
         ],
       ),
     );
   }
 
-  Widget _message(String src, String name, String message)  {
+  Widget _message(ChatRelation chatRelation)  {
     return InkWell(
       onTap: () {
-        Get.to(const ChatRoom());
+        Get.to(() => ChatRoom(sender: Utils.user!, recipient: chatRelation.user!));
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10, top: 10),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: Image.asset('images/$src', width: 60, height: 60,),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: chatRelation.user!.image == null
+                      ? Image.asset('images/user.jpg', width: 50, height: 50,)
+                      : Image.network(chatRelation.user!.image!,width: 50, height: 50, fit: BoxFit.fill,),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 1,
+                  child: chatRelation.user!.status == "ONLINE"
+                    ? const Icon(Icons.circle, color: Colors.green, size: 12,)
+                    : Container(),
+                )
+              ],
             ),
             const SizedBox(width: 20,),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 18, color: Colors.white),),
-                Text(message, style: const TextStyle(fontSize: 16, color: Colors.grey),)
+                Text(chatRelation.user!.title!, style: const TextStyle(fontSize: 16, color: Colors.white),),
+                const SizedBox(height: 5,),
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width / 2
+                  ),
+                  child: Text(
+                    chatRelation.chatMessage!.senderId! == Utils.user!.id
+                        ? "Bạn: ${chatRelation.chatMessage!.content!}"
+                        : chatRelation.chatMessage!.content!,
+                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             )
           ],
@@ -147,23 +209,30 @@ class _MessengerScreenState extends State<MessengerScreen> {
     );
   }
 
-  Widget _me(String path) {
-    return Column(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(34),
-          child: Image.asset("images/user.jpg", width: 68, height: 68,),
-        ),
-        const SizedBox(height: 5,),
-        const Text("Ghi chú", style: TextStyle(color: Colors.white),)
-      ],
+  Widget _me() {
+    return InkWell(
+      onTap: () {
+        Get.to(() => ChatRoom(sender: Utils.user!, recipient: Utils.user!));
+      },
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(34),
+            child: Utils.user!.image == null
+                ? Image.asset("images/user.jpg", width: 68, height: 68,)
+                : Image.network(Utils.user!.image!, width: 68, height: 68, fit: BoxFit.fill,),
+          ),
+          const SizedBox(height: 5,),
+          const Text("Ghi chú", style: TextStyle(color: Colors.white),)
+        ],
+      ),
     );
   }
 
-  Widget _others(String path) {
+  Widget _others(User user) {
     return InkWell(
       onTap: () {
-
+        Get.to(() => ChatRoom(sender: Utils.user!, recipient: user));
       },
       child: Padding(
         padding: const EdgeInsets.only(left: 10),
@@ -173,7 +242,9 @@ class _MessengerScreenState extends State<MessengerScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(34),
-                  child: Image.asset("images/user.jpg", width: 68, height: 68,),
+                  child: user.image == null
+                    ? Image.asset("images/user.jpg", width: 68, height: 68,)
+                    : Image.network(user.image!, width: 68, height: 68, fit: BoxFit.fill,),
                 ),
                 Positioned(
                   bottom: 0,
@@ -189,10 +260,11 @@ class _MessengerScreenState extends State<MessengerScreen> {
               ],
             ),
             const SizedBox(height: 5,),
-            const Text(".....", style: TextStyle(color: Colors.white),)
+            Text(user.title!, style: const TextStyle(color: Colors.white),)
           ],
         ),
       ),
     );
   }
+
 }

@@ -50,7 +50,6 @@ class _CommentScreenState extends State<CommentScreen> {
                         return const Center(child: CircularProgressIndicator(),);
                       }
                       else if(snapshot.hasError) {
-                        print(_commentController.comments.length);
                         return const Center(child: CircularProgressIndicator(),);
                       }
                       else {

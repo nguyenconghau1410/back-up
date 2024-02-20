@@ -99,16 +99,18 @@ class _StoryGallaryState extends State<StoryGallary> {
       File tempFile = File("${tempDir.path}/${DateTime.now().toString()}.jpg");
       tempFile.writeAsBytesSync(saveImage!);
       Future.delayed(const Duration(seconds: 2)).then((_) => Get.offAll(() => const DashBoard()));
-      String? src = await FileUpload.uploadImage(tempFile, "stories", "${Utils.user!.name}-${DateTime.now().toString()}-gallery");
+      String filename = "${Utils.user!.name}-${DateTime.now().toString()}-gallery";
+      String? src = await FileUpload.uploadImage(tempFile, "stories", filename);
       Story story = Story(null, Utils.user!.id, "Public", src,
-          null, DateTime.now().toString(), null);
+          null, "stories/$filename",DateTime.now().toString(), null);
       await APIPosts.createStory(story);
     }
     else {
       Future.delayed(const Duration(seconds: 2)).then((_) => Get.offAll(() => const DashBoard()));
-      String? src = await FileUpload.uploadImage(_fileUtils!.file!, "stories", "${Utils.user!.name}-${DateTime.now().toString()}-gallery");
+      String filename = "${Utils.user!.name}-${DateTime.now().toString()}-gallery";
+      String? src = await FileUpload.uploadImage(_fileUtils!.file!, "stories", filename);
       Story story = Story(null, Utils.user!.id, "Public", null,
-          src, DateTime.now().toString(), null);
+          src, "stories/$filename", DateTime.now().toString(), null);
       await APIPosts.createStory(story);
     }
   }
@@ -128,15 +130,21 @@ class _StoryGallaryState extends State<StoryGallary> {
                 if(_fileUtils!.type == "IMAGE") {
                   return LindiStickerWidget(
                       controller: _controller,
-                      child: Container(
-                        constraints: const BoxConstraints(
-                            maxHeight: 640
-                        ),
-                        child: Image.file(
-                          snapshot.data!.file!,
-                          width: MediaQuery.of(context).size.width,
-                          fit: BoxFit.fill,
-                        ),
+                      child: Column(
+                        children: [
+                          Expanded(child: Container()),
+                          Container(
+                            constraints: const BoxConstraints(
+                                maxHeight: 640
+                            ),
+                            child: Image.file(
+                              snapshot.data!.file!,
+                              width: MediaQuery.of(context).size.width,
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                          Expanded(child: Container()),
+                        ],
                       )
                   );
                 }

@@ -2,10 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:socials/api/api_following.dart';
 import 'package:socials/services/following_controller.dart';
-import 'package:socials/services/friends_controller.dart';
 import 'package:socials/utils/constant.dart';
+import 'package:socials/views/others_friends.dart';
 
+import '../api/api_images.dart';
+import '../api/api_posts.dart';
+import '../models/images.dart';
+import '../models/story.dart';
 import '../models/user.dart';
+import 'all_posts.dart';
+import 'all_stories.dart';
+import 'display_story.dart';
 
 class OthersProfile extends StatefulWidget {
   User user;
@@ -32,8 +39,15 @@ class _OthersProfileState extends State<OthersProfile> {
       }
     }
   }
-
-
+  Future<List<Story>> _getStory() async {
+    return APIPosts.getStoryByUserid(widget.user.id!);
+  }
+  Future<List<Images>> _getImages() async {
+    return APIImages.getByUserid(widget.user.id!);
+  }
+  Future<int> _getCountPost() async {
+    return await APIPosts.countByUserid(widget.user.id!);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,6 +55,7 @@ class _OthersProfileState extends State<OthersProfile> {
       appBar: _appBar(),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _component1(),
             const SizedBox(height: 25,),
@@ -48,10 +63,120 @@ class _OthersProfileState extends State<OthersProfile> {
             const SizedBox(height: 60,),
             Row(
               children: [
+                const SizedBox(width: 16,),
+                const Text("Stories", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500,),),
+                Expanded(child: Container()),
+                InkWell(
+                  onTap: () {
+                    Get.to(() => AllStory(user: widget.user,));
+                  },
+                  child: const Text("Xem tất cả", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500,),),
+                ),
+                const SizedBox(width: 5,),
+              ],
+            ),
+            const SizedBox(height: 10,),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: FutureBuilder(
+                future: _getStory(),
+                builder: (context, snapshot) {
+                  if(snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  }
+                  else if(snapshot.hasError) {
+                    return const CircularProgressIndicator();
+                  }
+                  else {
+                    final data = snapshot.data;
+                    return Row(
+                      children: List.generate(data!.length <= 6 ? data!.length : 6, (index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: InkWell(
+                            onTap: () {
+                              Get.to(() => DisplayStory(story: data[index], user: widget.user,));
+                            },
+                            child: Column(
+                              children: [
+                                Stack(
+                                  children: [
+                                    Container(
+                                      width: 80,
+                                      height: 80,
+                                      decoration: BoxDecoration(
+                                          color: Colors.black,
+                                          borderRadius: BorderRadius.circular(40),
+                                          border: Border.all(color: Colors.grey)
+                                      ),
+                                    ),
+                                    data[index]!.src_image != null
+                                        ? Positioned(
+                                      top: 5,
+                                      left: 5,
+                                      child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(35),
+                                          child: Image.network(data[index]!.src_image!, width: 70, height: 70, fit: BoxFit.fill,)
+                                      ),
+                                    )
+                                        : const Positioned(
+                                      top: 30,
+                                      left: 30,
+                                      child: Center(child: Icon(Icons.play_arrow, color: Colors.grey,),),
+                                    )
+                                  ],
+                                ),
+                                Text(Utils.formatDateToddmmyy(data[index]!.createdAt!), style: const TextStyle(color: Colors.grey, fontFamily: "Arizonia-Regular"),)
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    );
+                  }
+                },
+              ),
+            ),
+            Row(
+              children: [
                 _buildButton(true, const Icon(Icons.calendar_view_month_rounded, color: Colors.white,)),
                 _buildButton(false, const Icon(Icons.account_box_rounded, color: Colors.white,))
               ],
             ),
+            const SizedBox(height: 10,),
+            Obx(() {
+              bool isDisplay = isItemObx.value;
+              if(isDisplay) {
+                return FutureBuilder(
+                  future: _getImages(),
+                  builder: (context, snapshot) {
+                    if(snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    }
+                    else if(snapshot.hasError) {
+                      return const CircularProgressIndicator();
+                    }
+                    else {
+                      final data = snapshot.data;
+                      return Container(
+                        child: GridView.count(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 3,
+                          crossAxisSpacing: 3,
+                          shrinkWrap: true,
+                          children: List.generate(data!.length, (index) {
+                            return _buildImages(data[index]!);
+                          }),
+                        ),
+                      );
+                    }
+                  },
+                );
+              }
+              else {
+                return Container();
+              }
+            })
           ],
         ),
       ),
@@ -82,7 +207,9 @@ class _OthersProfileState extends State<OthersProfile> {
                 },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(40),
-                  child: Image.asset("images/111.jpg", width: 80, height: 80, fit: BoxFit.fill,),
+                  child: widget.user.image == null
+                    ? Image.asset("images/user.jpg", width: 80, height: 80, fit: BoxFit.fill,)
+                    : Image.network(widget.user.image!, width: 80, height: 80, fit: BoxFit.fill),
                 ),
               ),
               const SizedBox(height: 5,),
@@ -91,7 +218,17 @@ class _OthersProfileState extends State<OthersProfile> {
           ),
         ),
         Expanded(child: Container()),
-        _itemComponent1(0, "Bài viết"),
+        FutureBuilder(
+          future: _getCountPost(),
+          builder: (context, snapshot) {
+            final data = snapshot.data;
+            return Row(
+              children: [
+                _itemComponent1(data ?? 0, "Bài viết")
+              ],
+            );
+          },
+        ),
         Obx(() {
           final isFollowing = _followingController.isFollowing.value;
           final beingFollewed = _followingController.beingFollowed.value;
@@ -121,7 +258,9 @@ class _OthersProfileState extends State<OthersProfile> {
   Widget _itemComponent1(int quantity, String text) {
     return InkWell(
       onTap: () {
-
+        if(text != "Bài viết") {
+          Get.to(() => OtherFriends(user: widget.user));
+        }
       },
       child: Container(
         width: 80,
@@ -218,5 +357,18 @@ class _OthersProfileState extends State<OthersProfile> {
         ),
       );
     });
+  }
+  Widget _buildImages(Images image) {
+    return InkWell(
+      onTap: () {
+        Get.to(() => AllPosts(user: widget.user,));
+      },
+      child: Image.network(
+        image.image!,
+        width: MediaQuery.of(context).size.width / 3,
+        height: 130,
+        fit: BoxFit.cover,
+      ),
+    );
   }
 }

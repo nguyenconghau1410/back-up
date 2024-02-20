@@ -15,6 +15,16 @@ class VideoUtils extends GetxController {
     }
   }
 
+  VideoUtils.src(String src) {
+    controller = VideoPlayerController.networkUrl(Uri.parse(src))..initialize()..setLooping(true);
+    if(isPlay.value == true) {
+      isPlayVideo();
+    }
+    else {
+      isPauseVideo();
+    }
+  }
+
   void onChanged() {
     if(isPlay.value == false) {
       isPlayVideo();
