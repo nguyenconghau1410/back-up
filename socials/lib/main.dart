@@ -1,7 +1,11 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:socials/firebase/messaging_service.dart';
+import 'package:socials/services/chat_controller.dart';
 import 'package:socials/shared_preferences/local_storage.dart';
+import 'package:socials/utils/notification_service.dart';
 import 'package:socials/views/login_screen.dart';
 import 'package:socials/views/menu/dashboard.dart';
 import 'firebase_options.dart';
@@ -12,6 +16,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
+  NotificationService.initializeNotification();
   runApp(const MyApp());
 }
 

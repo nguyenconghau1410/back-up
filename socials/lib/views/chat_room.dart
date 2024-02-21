@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:socials/connect/connecting_websocket.dart';
+import 'package:socials/firebase/messaging_service.dart';
 import 'package:socials/models/chat_message.dart';
 import 'package:socials/models/chat_relation.dart';
 import 'package:socials/models/chat_rooms.dart';
@@ -30,6 +31,7 @@ class _ChatRoomState extends State<ChatRoom> {
   Future<void> _loadData() async {
     await ChatController.init(widget.sender!.id!, widget.recipient!.id!);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,13 +145,14 @@ class _ChatRoomState extends State<ChatRoom> {
             ),
           ),
           suffixIcon: InkWell(
-            onTap: () {
+            onTap: () async {
               ChatMessage message = ChatMessage(null, null, widget.sender.id, widget.recipient.id,
                   _controller.text.trim(), null, DateTime.now().toString());
               ConnectWebSocket.chatMessage(message);
               ChatController.addMessage(message);
               ChatRelation chatRelation = ChatRelation(widget.recipient, null, message);
               _chatRoom.changePosition(chatRelation);
+              await MessagingService.pushNotification(chatRelation);
               _controller.clear();
             },
             child: const Padding(
@@ -198,7 +201,7 @@ class _ChatRoomState extends State<ChatRoom> {
     return Container(
       alignment: aligment,
       child: Padding(
-        padding: const EdgeInsets.all(1.0),
+        padding: const EdgeInsets.only(bottom: 8),
         child: Column(
           crossAxisAlignment:
           (chatMessage.senderId == widget.sender.id) ? CrossAxisAlignment.end : CrossAxisAlignment.start,

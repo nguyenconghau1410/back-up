@@ -11,14 +11,15 @@ class User {
   String? image;
   String? status;
   String? lastOut;
+  String? tokenDevice;
   Role? role;
 
   User(
       {this.id, this.email, this.name, this.password, this.dob, this.gender, this.title,
-        this.image, this.status, this.lastOut,this.role});
+        this.image, this.status, this.lastOut, this.tokenDevice,this.role});
   User.other(this.id, this.email, this.name, this.password, this.dob, this.gender, this.title,
       this.image, this.status, this.lastOut,this.role);
-  User.auth(this.email, this.password);
+  User.auth(this.email, this.password, this.tokenDevice);
   User.register(this.email, this.name, this.password);
 
   User.fromJson(Map<String, dynamic> json) {
@@ -32,6 +33,7 @@ class User {
     image = json['image'];
     status = json['status'];
     lastOut = json['lastOut'];
+    tokenDevice = json['tokenDevice'];
     role = json['role'] != null ? Role.fromJson(json['role']) : null;
   }
   factory User.fromJson1(Map<String, dynamic> json) {
@@ -50,6 +52,7 @@ class User {
     data['title'] = this.title;
     data['image'] = this.image;
     data['status'] = this.status;
+    data['tokenDevice'] = this.tokenDevice;
     if (this.role != null) {
       data['role'] = this.role!.toJson();
     }

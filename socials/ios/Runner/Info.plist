@@ -52,5 +52,41 @@
         <key>NSAllowsArbitraryLoads</key>
         <true/>
     </dict>
+    <key>FirebaseMessagingAutoInitEnabled</key>
+    <false/>
+    <key>UIUserNotificationSettings</key>
+    <dict>
+        <key>categories</key>
+        <array>
+            <dict>
+                <key>actions</key>
+                <array>
+                    <dict>
+                        <key>activationMode</key>
+                        <string>foreground</string>
+                        <key>authenticationRequired</key>
+                        <false/>
+                        <key>destructive</key>
+                        <false/>
+                        <key>identifier</key>
+                        <string>VIEW</string>
+                        <key>title</key>
+                        <string>View</string>
+                    </dict>
+                </array>
+                <key>intentIdentifiers</key>
+                <array/>
+                <key>options</key>
+                <array>
+                    <dict>
+                        <key>category</key>
+                        <string>MESSAGE</string>
+                        <key>title</key>
+                        <string>Message</string>
+                    </dict>
+                </array>
+            </dict>
+        </array>
+    </dict>
 </dict>
 </plist>

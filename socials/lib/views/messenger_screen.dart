@@ -30,6 +30,13 @@ class _MessengerScreenState extends State<MessengerScreen> {
   Future<List<User>> getUserConnected() {
     return APIService.getUsersConnected(Utils.user!);
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _chatRoomController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

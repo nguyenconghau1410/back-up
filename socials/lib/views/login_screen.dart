@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:socials/api/api_service.dart';
 import 'package:socials/connect/connecting_websocket.dart';
+import 'package:socials/firebase/messaging_service.dart';
 import 'package:socials/utils/constant.dart';
 import 'package:socials/views/menu/dashboard.dart';
 import 'package:socials/views/register_screen.dart';
@@ -25,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void login() async {
     User user = User.auth(emailController.text.trim(),
-                          passwordController.text.trim());
+                          passwordController.text.trim(), await MessagingService.getTokenDevice());
     final auth = await APIService.login(user);
     if(auth != null) {
       Get.snackbar(

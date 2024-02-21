@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:get/get.dart';
 import 'package:socials/models/chat_message.dart';
 import 'package:socials/models/chat_relation.dart';
 import 'package:socials/services/chat_controller.dart';
 import 'package:socials/services/chat_room_controller.dart';
 import 'package:socials/utils/constant.dart';
+import 'package:socials/utils/notification_service.dart';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
@@ -54,6 +56,14 @@ class ConnectWebSocket {
       if(relation.chatMessage!.chatId == ChatController.messages.first.chatId) {
         ChatController.addMessage(relation.chatMessage!);
       }
+    }
+    else {
+      NotificationService.showNotification(
+        title: relation.user!.title!,
+        body: relation.chatMessage!.content!,
+        summary: "Tin nhắn",
+        notificationLayout: NotificationLayout.Inbox,
+      );
     }
     ChatRoomController chatRoomController = Get.put(ChatRoomController());
     chatRoomController.changePosition(relation);
