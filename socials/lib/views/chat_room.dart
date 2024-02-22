@@ -8,6 +8,9 @@ import 'package:socials/models/chat_rooms.dart';
 import 'package:socials/services/chat_controller.dart';
 import 'package:socials/services/chat_room_controller.dart';
 import 'package:socials/utils/constant.dart';
+import 'package:socials/utils/notification_service.dart';
+import 'package:socials/views/video_call.dart';
+import 'package:socials/views/voice_chat.dart';
 
 import '../models/user.dart';
 
@@ -109,14 +112,18 @@ class _ChatRoomState extends State<ChatRoom> {
           Expanded(child: Container()),
           InkWell(
               onTap: () {
-
+                ConnectWebSocket.requestCall(widget.sender, widget.recipient, "VOICE");
+                String roomId = widget.sender!.id! + widget.recipient!.id!;
+                Get.to(() => VoiceChat(userid: widget.sender!.id!, callid: roomId, name: widget.sender!.name!,));
               },
               child: const Icon(Icons.phone, size: 24,)
           ),
           const SizedBox(width: 20,),
           InkWell(
               onTap: () {
-
+                ConnectWebSocket.requestCall(widget.sender, widget.recipient, "VIDEO");
+                String roomId = widget.sender!.id! + widget.recipient!.id!;
+                Get.to(() => VideoCall(userid: widget.sender!.id!, callid: roomId, name: widget.sender!.name!,));
               },
               child: const Icon(Icons.videocam_outlined, size: 32,)
           ),

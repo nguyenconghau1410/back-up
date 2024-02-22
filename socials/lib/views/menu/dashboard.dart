@@ -10,6 +10,7 @@ import 'package:socials/views/menu/profile.dart';
 import 'package:socials/views/menu/short_cut.dart';
 
 import '../../services/chat_controller.dart';
+import '../../utils/notification_service.dart';
 
 class DashBoard extends StatefulWidget {
   const DashBoard({super.key});

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:get/get.dart';
 import 'package:socials/api/api_chat.dart';
 import 'package:socials/models/chat_message.dart';
@@ -18,6 +16,6 @@ class ChatController extends GetxController {
 
   static void destroy() {
     isCreated = false;
-    messages = <ChatMessage>[].obs;
+    messages.clear();
   }
 }
