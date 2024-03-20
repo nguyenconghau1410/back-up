@@ -3,7 +3,10 @@ import 'package:get/get.dart';
 import 'package:socials/models/comment.dart';
 import 'package:socials/services/comment_controller.dart';
 
+import '../api/api_notification.dart';
+import '../models/notification_be.dart';
 import '../models/post.dart';
+import '../models/user.dart';
 import '../utils/constant.dart';
 
 class CommentScreen extends StatefulWidget {
@@ -20,6 +23,7 @@ class _CommentScreenState extends State<CommentScreen> {
   CommentController _commentController = CommentController();
   String? commentId;
   int? idx;
+  User? user;
   @override
   void initState() {
     super.initState();
@@ -29,6 +33,12 @@ class _CommentScreenState extends State<CommentScreen> {
   }
   Future<List<Comment>> _loadData1(List<Comment> replies) async {
     return replies;
+  }
+
+  Future<void> pushNotificationToOther(String userid, String content) async {
+    NotificationBE notificationBE = NotificationBE(null, userid, Utils.user, "${Utils.user!.title} $content",
+        DateTime.now().toString(), false);
+    await APINotification.addNotification(notificationBE);
   }
 
   @override
@@ -103,6 +113,7 @@ class _CommentScreenState extends State<CommentScreen> {
                 comment.clicked.value = true;
                 commentId = comment.id;
                 idx = index;
+                user = comment.user;
                 _controller.text = "@${comment.user!.name} ";
                 _focusNode.requestFocus();
                 _focusNode.addListener(() {
@@ -175,11 +186,16 @@ class _CommentScreenState extends State<CommentScreen> {
                     _controller.text, null, DateTime.now().toString(), null);
                 _commentController.comments[idx!].replies!.add(comment);
                 _commentController.addFake(comment, widget.post.id!, commentId!);
-                commentId = null; idx = null;
+                if(Utils.user!.id == widget.post.userid && user != null) {
+                  print(user!.title);
+                  pushNotificationToOther(user!.id!, "chủ bài viết đã trả lời bình luận của bạn");
+                }
+                commentId = null; idx = null; user = null;
               }
               else if(_controller.text != "") {
                 _commentController.addComment(Comment(null, Utils.user!, widget.post.id,
                     _controller.text, null, DateTime.now().toString(), null));
+                pushNotificationToOther(widget.post!.userid!, "đã bình luận bài viết của bạn");
               }
               _controller.clear();
             },

@@ -11,9 +11,10 @@ class Post {
   String? type;
   String? location;
   List<Images>? images;
+  List<String>? ids;
 
   Post(this.id, this.userid, this.content, this.status, this.src, this.createdAt,
-      this.modifiedAt, this.type, this.location, this.images);
+      this.modifiedAt, this.type, this.location, this.images, this.ids);
   factory Post.fromJson(Map<String, dynamic> json) {
     List<Images> images = [];
     if(json['images'] != null) {
@@ -21,8 +22,15 @@ class Post {
         images.add(Images.fromJson(json['images'][i]));
       }
     }
+    List<String> ids = [];
+    if(json['ids'] != null) {
+      for(int i = 0; i < json['ids'].length; i++) {
+        ids.add(json['ids'][i]);
+      }
+    }
     return Post(json['id'], json['userid'], json['content'], json['status'],
-        json['src'], json['createdAt'], json['modifiedAt'], json['type'], json['location'], json['images'] != null ? images : null);
+        json['src'], json['createdAt'], json['modifiedAt'], json['type'], json['location'], json['images'] != null ? images : null,
+        json['ids'] != null ? ids : null);
   }
 
   Map<String, dynamic> toJson() {

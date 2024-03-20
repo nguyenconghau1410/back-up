@@ -9,9 +9,16 @@ import com.example.social.service.FollowingService;
 import com.example.social.service.PostsService;
 import com.example.social.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +33,11 @@ public class PostAPI {
     @PostMapping("/create")
     public ResponseEntity<PostDocument> insert(@RequestBody PostDocument postDocument) {
         return ResponseEntity.ok(postsService.insert(postDocument));
+    }
+
+    @PutMapping("/editing-post")
+    public void edit(@RequestBody PostDocument postDocument) {
+        postsService.edit(postDocument);
     }
 
     @GetMapping("/get-all/post")
@@ -68,5 +80,20 @@ public class PostAPI {
     @GetMapping("/get-other-post")
     public ResponseEntity<List<PostRelation>> getOtherPost(@RequestParam String userid) {
         return ResponseEntity.ok(postsService.getOtherPost(userid));
+    }
+
+    @DeleteMapping("/delete-post")
+    public void delete(@RequestParam String postId) {
+        postsService.delete(postId);
+    }
+
+    @GetMapping("/reels")
+    public ResponseEntity<List<PostRelation>> getReels(@RequestParam String userid) {
+        return ResponseEntity.ok(postsService.getReels(userid));
+    }
+
+    @PutMapping("/report")
+    public void report(@RequestParam String postid, @RequestParam String userid) {
+        postsService.savePost(postid, userid);
     }
 }

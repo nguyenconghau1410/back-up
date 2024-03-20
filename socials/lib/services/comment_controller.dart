@@ -9,8 +9,8 @@ class CommentController extends GetxController {
   }
 
   Future<void> addComment(Comment comment) async {
-    // comments.add((await APIFavorite.addComment(comment))!);
-    comments.insert(0, (await APIFavorite.addComment(comment))!);
+    comments.add((await APIFavorite.addComment(comment))!);
+    // comments.insert(0, (await APIFavorite.addComment(comment))!);
   }
   Future<void> addFake(Comment comment, String postid, String commentId) async {
     await APIFavorite.addCommentNode1(comment, postid, commentId);

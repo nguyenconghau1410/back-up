@@ -3,11 +3,14 @@ import 'package:get/get.dart';
 import 'package:socials/api/api_following.dart';
 import 'package:socials/services/following_controller.dart';
 import 'package:socials/utils/constant.dart';
+import 'package:socials/views/chat_room.dart';
 import 'package:socials/views/others_friends.dart';
 
 import '../api/api_images.dart';
+import '../api/api_notification.dart';
 import '../api/api_posts.dart';
 import '../models/images.dart';
+import '../models/notification_be.dart';
 import '../models/story.dart';
 import '../models/user.dart';
 import 'all_posts.dart';
@@ -47,6 +50,11 @@ class _OthersProfileState extends State<OthersProfile> {
   }
   Future<int> _getCountPost() async {
     return await APIPosts.countByUserid(widget.user.id!);
+  }
+  Future<void> pushNotificationToOther(String userid, String content) async {
+    NotificationBE notificationBE = NotificationBE(null, userid, Utils.user, "${Utils.user!.title} $content",
+        DateTime.now().toString(), false);
+    await APINotification.addNotification(notificationBE);
   }
   @override
   Widget build(BuildContext context) {
@@ -295,7 +303,7 @@ class _OthersProfileState extends State<OthersProfile> {
                 )
             ),
             onPressed: () {
-
+              Get.to(() => ChatRoom(sender: Utils.user!, recipient: widget.user));
             },
             child: Text(
               text,
@@ -319,9 +327,11 @@ class _OthersProfileState extends State<OthersProfile> {
             onPressed: () {
               if(isFriend.value) {
                 APIFollowing.unFollow(Utils.user!.id!, widget.user.id!);
+                pushNotificationToOther(widget.user!.id!, "đã bỏ theo dõi bạn");
               }
               else {
                 APIFollowing.addFriend(Utils.user!.id!, widget.user.id!);
+                pushNotificationToOther(widget.user!.id!, "đã theo dõi bạn");
               }
               isFriend.value = !isFriend.value;
             },

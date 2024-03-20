@@ -1,15 +1,16 @@
 import 'dart:core';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:socials/api/api_posts.dart';
 import 'package:socials/models/favorite.dart';
 import 'package:socials/models/post_relation.dart';
 import 'package:socials/views/comment_screen.dart';
+import 'package:socials/views/editing_post.dart';
 import 'package:socials/views/view_image.dart';
 
 import '../models/images.dart';
-import '../models/post.dart';
 import '../models/user.dart';
 import '../services/post_controller.dart';
 import '../utils/constant.dart';
@@ -39,6 +40,33 @@ class _AllPostsState extends State<AllPosts> {
       list.add(postController);
     });
     posts = list;
+  }
+
+  Future<void> _deletePost(String postId) async {
+    bool check = await APIPosts.deletePost(postId);
+    if(check) {
+      Fluttertoast.showToast(
+          msg: "Xóa bài viết thành công",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.grey,
+          textColor: Colors.white,
+          fontSize: 16
+      );
+      Get.back();
+    }
+    else {
+      Fluttertoast.showToast(
+          msg: "Đã có lỗi xảy ra, hãy thử lại!",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.grey,
+          textColor: Colors.white,
+          fontSize: 16
+      );
+    }
   }
 
   @override
@@ -118,7 +146,75 @@ class _AllPostsState extends State<AllPosts> {
                   ],
                 ),
                 Expanded(child: Container()),
-                const Icon(Icons.more_vert, color: Colors.white, size: 24,)
+                InkWell(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            backgroundColor: Colors.black,
+                            shape: Border.all(
+                                color: Colors.grey.withOpacity(0.5)
+                            ),
+                            title: const Center(child: Text('Thao tác', style: TextStyle(color: Colors.white),)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  title: const Row(
+                                    children: [
+                                      Icon(Icons.delete, color: Colors.white,),
+                                      SizedBox(width: 20,),
+                                      Text("Xóa bài viết", style: TextStyle(color: Colors.white),)
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    Get.back();
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Get.back();
+                                                _deletePost(post.postRelation!.post!.id!);
+                                              },
+                                              child: const Text("Xác nhận"),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Get.back();
+                                              },
+                                              child: const Text("Đóng"),
+                                            )
+                                          ],
+                                          title: const Text("Thông báo"),
+                                          content: const Text("Bạn muốn xóa bài viết này ?"),
+                                          contentPadding: const EdgeInsets.all(20),
+                                        )
+                                    );
+                                  },
+                                ),
+                                ListTile(
+                                  title: const Row(
+                                    children: [
+                                      Icon(Icons.edit, color: Colors.white,),
+                                      SizedBox(width: 20,),
+                                      Text("Chỉnh sửa bài viết", style: TextStyle(color: Colors.white),)
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    Get.to(() => EditingPost(post: post.postRelation!.post!));
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                    );
+                  },
+                  child: const Icon(Icons.more_vert, color: Colors.white, size: 24,),
+                )
               ],
             ),
             const SizedBox(height: 30,),
@@ -183,39 +279,30 @@ class _AllPostsState extends State<AllPosts> {
       ),
     );
   }
-  Widget _buildListImages(List<Images> list)
-  {
-    return ListView.builder(
-      shrinkWrap: true,
-      scrollDirection: Axis.horizontal,
-      itemCount: list.length,
-      itemBuilder: (context, index) {
-        int cnt = list.length;
-        int i = index + 1;
-        return InkWell(
-          onTap: () {
-            Get.to(() => ViewImage(images: list));
-          },
-          child: Stack(
-            children: [
-              _buildImage(list[index].image!),
-              Positioned(
-                top: 5,
-                right: 10,
-                child: Container(
-                  width: 30,
-                  height: 20,
-                  decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(20)
+  Widget _buildListImages(List<Images> list) {
+    return PageView(
+        children: List.generate(list.length, (index) {
+          int cnt = list.length;
+          int i = index + 1;
+          return InkWell(
+            onTap: () {
+              Get.to(() => ViewImage(images: list));
+            },
+            child: Stack(
+              children: [
+                _buildImage(list[index]!.image!),
+                Positioned(
+                  top: 5,
+                  right: 10,
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: Text(cnt == 1 ? "" : "$i/$cnt", style: const TextStyle(color: Colors.white),),
                   ),
-                  child: Center(child: Text(cnt == 1 ? "" : "$i/$cnt", style: const TextStyle(color: Colors.white),),),
-                ),
-              )
-            ],
-          ),
-        );
-      },
+                )
+              ],
+            ),
+          );
+        })
     );
   }
   Widget _buildImage(String text) {

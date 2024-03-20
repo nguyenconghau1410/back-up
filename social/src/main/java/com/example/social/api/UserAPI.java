@@ -10,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 @RestController
@@ -56,4 +58,23 @@ public class UserAPI {
         return ResponseEntity.ok(userService.findByNameContaining(keyword));
     }
 
+    @GetMapping("/users/hint-user")
+    public ResponseEntity<List<UserDocument>> getHintUser(@RequestParam String userid) {
+        return ResponseEntity.ok(userService.recommendUser(userid));
+    }
+
+    @GetMapping("/users/hint-user-6")
+    public ResponseEntity<List<UserDocument>> getHint6User(@RequestParam String userid) {
+        List<UserDocument> users = userService.recommendUser(userid);
+        if(users.size() > 6) {
+            Random random = new Random();
+            List<UserDocument> finalList = new ArrayList<>();
+            int rad = random.nextInt(users.size() - 6);
+            for (int i = rad - 1; i <= rad + 5; i++) {
+                finalList.add(users.get(i));
+            }
+            return ResponseEntity.ok(finalList);
+        }
+        return ResponseEntity.ok(userService.recommendUser(userid));
+    }
 }

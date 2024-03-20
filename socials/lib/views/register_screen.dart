@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:socials/api/api_service.dart';
 
@@ -21,6 +22,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   var isObsecure = true.obs;
 
   void register() async {
+    if(emailController.text == "" || nameController.text == "" || passwordController.text == "") {
+      Fluttertoast.showToast(
+        msg: "Hãy nhập vào đầy đủ các ô",
+        gravity: ToastGravity.TOP
+      );
+      return;
+    }
+    if(passwordController.text.trim().length < 8) {
+      Fluttertoast.showToast(
+          msg: "Mật khẩu phải có ít nhất 8 kí tự",
+          gravity: ToastGravity.TOP
+      );
+      return;
+    }
     User user = User.register(emailController.text.trim(),
         nameController.text.trim(), passwordController.text.trim());
     final acc = await APIService.register(user);
@@ -29,7 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'Đăng ký thành công',
         "Let's get started!",
         duration: const Duration(seconds: 3),
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         colorText: Colors.white,
         backgroundColor: Colors.black,
         messageText: const Center(
@@ -44,9 +59,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     else {
       Get.snackbar(
         'Đăng ký thất bại',
-        'Đã có lỗi xảy ra, hãy thử lại!',
+        'Email này đã được đăng ký, hãy chọn email khác',
         duration: const Duration(seconds: 3),
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         colorText: Colors.white,
         backgroundColor: Colors.black,
       );
@@ -251,7 +266,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             horizontal: 28
                                         ),
                                         child: Text(
-                                          "Login",
+                                          "Register",
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 16,

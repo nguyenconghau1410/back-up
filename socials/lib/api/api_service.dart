@@ -118,4 +118,48 @@ class APIService {
       rethrow;
     }
   }
+  static Future<List<User>> getHintUser(String userid) async {
+    try {
+      final response = await http.get(
+        Uri.parse("${Utils.baseURL}/users/hint-user").replace(queryParameters: {"userid": userid})
+      );
+      if(response.statusCode == 200) {
+        List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+        List<User> users = [];
+        data.forEach((element) {
+          users.add(User.fromJson(element));
+        });
+        return users;
+      }
+      else {
+        print(response.statusCode);
+        return [];
+      }
+    }
+    catch(e) {
+      rethrow;
+    }
+  }
+  static Future<List<User>> getHintUser6(String userid) async {
+    try {
+      final response = await http.get(
+          Uri.parse("${Utils.baseURL}/users/hint-user-6").replace(queryParameters: {"userid": userid})
+      );
+      if(response.statusCode == 200) {
+        List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+        List<User> users = [];
+        data.forEach((element) {
+          users.add(User.fromJson(element));
+        });
+        return users;
+      }
+      else {
+        print(response.statusCode);
+        return [];
+      }
+    }
+    catch(e) {
+      rethrow;
+    }
+  }
 }

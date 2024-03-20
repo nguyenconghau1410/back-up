@@ -19,6 +19,7 @@ import 'package:socials/views/all_stories.dart';
 import 'package:socials/views/creating_posts.dart';
 import 'package:socials/views/creating_shortcut.dart';
 import 'package:socials/views/display_story.dart';
+import 'package:socials/views/recommendation_friends.dart';
 import 'package:socials/views/story_design.dart';
 import 'package:socials/views/edit_profile.dart';
 import 'package:socials/views/friends.dart';
@@ -26,8 +27,11 @@ import 'package:socials/views/login_screen.dart';
 import 'package:socials/views/story_galary.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../models/post.dart';
 import '../../models/post_relation.dart';
 import '../../models/story.dart';
+import '../../models/user.dart';
+import '../../services/hint_controller.dart';
 import '../../utils/video_app.dart';
 import '../test.dart';
 
@@ -41,10 +45,10 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   var isObx = true.obs;
   var isItemObx = true.obs;
-  List<String> list = ["Ngọc Quỳnh", "Thanh Bình", "Hồng Phương", "Thúy Vân"];
   final ImageController _imageController = Get.put(ImageController());
   final FollowingController _followingController = Get.put(FollowingController());
   List<VideoUtils> videos = [];
+  List<HintController> hints = [];
   @override
   void initState() {
     _imageController.imageUrl.value = Utils.user!.image == null
@@ -84,12 +88,19 @@ class _ProfileState extends State<Profile> {
     return APIPosts.getStoryByUserid(Utils.user!.id!);
   }
   Future<List<PostRelation>> _getShortCut() async {
-    // List<PostRelation> posts = await APIPosts.getAllShortCut(Utils.user!.id!);
-    // posts.forEach((element) {
-    //   videos.add(VideoUtils.src(element.post!.src!));
-    // });
     return APIPosts.getAllShortCut(Utils.user!.id!);
   }
+  Future<void> _getHints() async {
+    List<User> users = await APIService.getHintUser6(Utils.user!.id!);
+    List<HintController> temp = [];
+    users.forEach((element) {
+      HintController hint = HintController();
+      hint.init(element);
+      temp.add(hint);
+    });
+    hints = temp;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +115,7 @@ class _ProfileState extends State<Profile> {
             const SizedBox(height: 25,),
             _component2(),
             const SizedBox(height: 25,),
-            _component3(list),
+            _component3(),
             const SizedBox(height: 20,),
             Row(
               children: [
@@ -247,7 +258,7 @@ class _ProfileState extends State<Profile> {
                           shrinkWrap: true,
                           children: List.generate(data!.length, (index) {
                             videos.add(VideoUtils.src(data[index].post!.src!));
-                            return _buildVideos(videos.last);
+                            return _buildVideos(videos.last, data[index]);
                           }),
                         ),
                       );
@@ -379,7 +390,7 @@ class _ProfileState extends State<Profile> {
       ],
     );
   }
-  Widget _component3(List<String> list) {
+  Widget _component3() {
     return Obx(() {
       bool isDisplay = isObx.value;
       if(!isDisplay) {
@@ -396,7 +407,7 @@ class _ProfileState extends State<Profile> {
                   Expanded(child: Container()),
                   InkWell(
                     onTap: () {
-                      APIFollowing.getFollowingId(Utils.user!.id);
+                      Get.to(() => const RecommendFriends());
                     },
                     child: const Text(
                       "Xem tất cả", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16),
@@ -405,9 +416,22 @@ class _ProfileState extends State<Profile> {
                 ],
               ),
               const SizedBox(height: 16,),
-              SizedBox(
-                  height: 220,
-                  child: _listItemFriend(list)
+              FutureBuilder(
+                future: _getHints(),
+                builder: (context, snapshot) {
+                  if(snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(),);
+                  }
+                  else if(snapshot.hasError){
+                    return const Center(child: CircularProgressIndicator(),);
+                  }
+                  else {
+                    return SizedBox(
+                        height: 220,
+                        child: _listItemFriend(hints)
+                    );
+                  }
+                },
               ),
             ],
           ),
@@ -496,7 +520,7 @@ class _ProfileState extends State<Profile> {
       );
     });
   }
-  Widget _listItemFriend(List<String> list) {
+  Widget _listItemFriend(List<HintController> list) {
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       itemCount: list.length,
@@ -505,7 +529,7 @@ class _ProfileState extends State<Profile> {
       },
     );
   }
-  Widget _itemFriend(String name) {
+  Widget _itemFriend(HintController hint) {
     return Container(
       width: 170,
       margin: const EdgeInsets.only(right: 10),
@@ -519,33 +543,36 @@ class _ProfileState extends State<Profile> {
         children: [
           Expanded(child: Container()),
           ClipOval(
-            child: Image.asset(
-              "images/login.jpg",
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
-            ),
+            child: hint.user!.image == null
+              ? Image.asset("images/user.jpg", width: 80, height: 80, fit: BoxFit.fill,)
+              : Image.network(hint.user!.image!, width: 80, height: 80, fit: BoxFit.fill),
           ),
           Expanded(child: Container()),
-          Text(name, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
+          Text(hint.user!.name!, style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700), textAlign: TextAlign.center,),
           Expanded(child: Container()),
           Padding(
             padding: const EdgeInsets.only(left: 10, right: 10),
-            child: TextButton(
-              style: TextButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)
+            child: Obx(
+                () => TextButton(
+                  style: TextButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)
+                      )
+                  ),
+                  onPressed: () {
+                    hint.onChanged(Utils.user!.id!, hint.user!.id!);
+                  },
+                  child: Container(
+                    width: MediaQuery.of(context).size.width,
+                    child: Center(
+                        child: hint.clicked.value
+                          ? const Text("Đã theo dõi", style: TextStyle(color: Colors.white, fontSize: 15))
+                          : const Text("Theo dõi", style: TextStyle(color: Colors.white, fontSize: 15)),
+                    )
                   )
-              ),
-              onPressed: () {
-
-              },
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                child: const Center(child: Text("Theo dõi", style: TextStyle(color: Colors.white, fontSize: 15),)),
-              ),
-            ),
+                )
+            )
           ),
           Expanded(child: Container()),
         ],
@@ -633,10 +660,10 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildVideos(VideoUtils videoUtils) {
+  Widget _buildVideos(VideoUtils videoUtils, PostRelation post) {
     return InkWell(
       onTap: () {
-        Get.to(() => AllShortCut(user: Utils.user!));
+        Get.to(() => AllShortCut(user: Utils.user!, post: post,));
       },
       child: VideoPlayer(videoUtils.controller),
     );

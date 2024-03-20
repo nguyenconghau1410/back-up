@@ -79,6 +79,7 @@ class NotificationService {
   static Future<void> onDismissActionReceivedMethod(
       ReceivedAction receivedAction) async {
     debugPrint('onDismissActionReceivedMethod');
+    await AwesomeNotifications().cancel(10);
   }
 
   static Future<void> showNotification(ChatRelation relation) async {

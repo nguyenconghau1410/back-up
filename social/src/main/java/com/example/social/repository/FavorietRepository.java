@@ -9,4 +9,6 @@ public interface FavorietRepository extends MongoRepository<FavoriteDocument, St
     FavoriteDocument insert(FavoriteDocument favoriteDocument);
     void deleteByUseridAndPostid(String userid, String postid);
     List<FavoriteDocument> findByPostid(String postid);
+
+    void deleteByPostid(String postid);
 }

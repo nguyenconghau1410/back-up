@@ -9,4 +9,6 @@ public interface CommentReposity extends MongoRepository<CommentDocument, String
     CommentDocument insert(CommentDocument commentDocument);
     List<CommentDocument> findByPostid(String postid);
     CommentDocument findByPostidAndId(String postId, String id);
+
+    void deleteByPostid(String postid);
 }

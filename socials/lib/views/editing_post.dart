@@ -1,104 +1,49 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:socials/api/api_posts.dart';
-import 'package:socials/services/upload_file.dart';
-import 'package:socials/utils/constant.dart';
-import 'package:socials/utils/video_app.dart';
-import 'package:socials/views/creating_posts.dart';
-import 'package:socials/views/menu/dashboard.dart';
-import 'package:video_player/video_player.dart';
 
-import '../models/images.dart';
 import '../models/post.dart';
+import '../utils/constant.dart';
+import 'creating_posts.dart';
+import 'menu/dashboard.dart';
 
-class NextCreatingPost extends StatefulWidget {
-  FileUtils? file;
-  List<FileUtils>? files;
-  NextCreatingPost({super.key, required this.file, required this.files});
+class EditingPost extends StatefulWidget {
+  Post post;
+  EditingPost({super.key, required this.post});
 
   @override
-  State<NextCreatingPost> createState() => _NextCreatingPostState();
+  State<EditingPost> createState() => _EditingPostState();
 }
 
-class _NextCreatingPostState extends State<NextCreatingPost> {
+class _EditingPostState extends State<EditingPost> {
   final _controller = TextEditingController();
   final _locationController = TextEditingController();
-  final Map<int, VideoUtils> _videoController = {};
-  VideoUtils? _videoUtils;
   var data = false.obs;
-  Future<void> creatingPost() async {
-    if(widget.file != null) {
-      String type = "";
-      if(widget.file!.type == "IMAGES") {
-        type = "images";
-      }
-      String? url = await FileUpload.uploadImage(widget.file!.file!, type, "${Utils.user!.name}-${DateTime.now().toString()}-post");
-      List<Images> images = [];
-      if(url != null) {
-        images.add(Images(null, url));
-      }
-      String status = !data.value ? "Public" : "Private";
-      Post post = Post(null, Utils.user!.id, _controller.text,
-          status, null, DateTime.now().toString(), null, "POST", _locationController.text, images, []);
-      await APIPosts.createPost(post, "Bài viết");
-    }
-    else {
-      List<Images> images = [];
-      for(int i = 0; i < widget.files!.length; i++) {
-        String type = "";
-        if(widget.files![i].type == "IMAGE") {
-          type = "images";
-        }
-        print(widget.files![i].file.toString());
-        String? url = await FileUpload.uploadImage(widget.files![i].file!, type, "${Utils.user!.name}-${DateTime.now().toString()}-post");
-        print(url);
-        if(url != null) {
-          images.add(Images(null, url));
-        }
-      }
-      Post post = Post(null, Utils.user!.id, _controller.text,
-          "Public", null, DateTime.now().toString(), null, "POST", _locationController.text,images, []);
-      await APIPosts.createPost(post, "Bài viết");
-    }
+  Future<void> savePost() async {
+    Post post = widget.post;
+    post.content = _controller.text;
+    post.location = _locationController.text;
+    post.modifiedAt = DateTime.now().toString();
+    post.status = !data.value ? "Public" : "Private";
+    await APIPosts.editingPost(post);
   }
 
   @override
   void initState() {
     super.initState();
-    if(widget.files != null) {
-      for(int i = 0; i < widget.files!.length; i++) {
-        if(widget.files![i].type == "VIDEO") {
-          _videoController[i] = VideoUtils(widget.files![i].file!);
-        }
-      }
-    }
-    else {
-      if(widget.file!.type == "VIDEO") {
-        _videoUtils = VideoUtils(widget.file!.file!);
-      }
-    }
+    data.value = widget.post.status == "Public" ? false : true;
+    _controller.text = widget.post!.content!;
+    _locationController.text = widget.post!.location!;
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    if(_videoController.isNotEmpty) {
-      _videoController.forEach((key, value) {
-        value.dispose();
-      });
-    }
-    else {
-      _videoUtils!.dispose();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: _appBar("Tạo bài viết"),
+      appBar: _appBar("Chỉnh sửa bài viết"),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 10, top: 10),
@@ -119,7 +64,7 @@ class _NextCreatingPostState extends State<NextCreatingPost> {
               ),
               const SizedBox(height: 20,),
               Obx(
-                  () => Row(
+                      () => Row(
                     children: [
                       InkWell(
                         onTap: () {
@@ -181,15 +126,14 @@ class _NextCreatingPostState extends State<NextCreatingPost> {
               const SizedBox(height: 20,),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                child: widget.files != null
-                  ? Row(
-                  children: List.generate(widget.files!.length, (index) => Padding(
+                child: Row(
+                  children: List.generate(widget.post.images!.length, (index) => Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: Stack(
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.file(widget.files![index].file!, width: 200, height: 200, fit: BoxFit.fill,),
+                            child: Image.network(widget.post.images![index].image!, width: 200, height: 200, fit: BoxFit.fill,),
                           ),
                           Positioned(
                             right: 5,
@@ -197,7 +141,7 @@ class _NextCreatingPostState extends State<NextCreatingPost> {
                             child: InkWell(
                               onTap: () {
                                 setState(() {
-                                  widget.files!.remove(widget.files![index]);
+                                  widget.post.images!.remove(widget.post.images![index]);
                                 });
                               },
                               child: Container(
@@ -216,27 +160,6 @@ class _NextCreatingPostState extends State<NextCreatingPost> {
                   )
                   ),
                 )
-                  : Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.file(widget.file!.file!, width: 200, height: 200, fit: BoxFit.fill,),
-                    ),
-                    Positioned(
-                      right: 5,
-                      top: 5,
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(15)
-                        ),
-                        child: const Center(child: Icon(Icons.delete, size: 20, color: Colors.white,),),
-                      )
-                    )
-                  ],
-                ),
               ),
               const SizedBox(height: 20,),
               Column(
@@ -289,11 +212,10 @@ class _NextCreatingPostState extends State<NextCreatingPost> {
                   textColor: Colors.white,
                   fontSize: 16
               );
-              print(DateTime.now().toString());
               Future.delayed(const Duration(seconds: 2)).then((_) => Get.offAll(() => const DashBoard()));
-              creatingPost();
+              savePost();
             },
-            child: const Text("ĐĂNG", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w700, fontSize: 18),),
+            child: const Text("LƯU", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w700, fontSize: 18),),
           )
         ],
       ),

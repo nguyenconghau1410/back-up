@@ -1,14 +1,8 @@
 package com.example.social.service;
 
-import com.example.social.document.FollowingDocument;
-import com.example.social.document.Images;
-import com.example.social.document.PostDocument;
-import com.example.social.document.UserDocument;
+import com.example.social.document.*;
 import com.example.social.dto.PostRelation;
-import com.example.social.repository.FavorietRepository;
-import com.example.social.repository.FollowingRepository;
-import com.example.social.repository.PostsRepository;
-import com.example.social.repository.UserRepository;
+import com.example.social.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +16,11 @@ import java.util.List;
 public class PostsService {
     private final PostsRepository postsRepository;
     private final ImagesService imagesService;
+    private final ImagesRepository imagesRepository;
     private final FollowingRepository followingRepository;
     private final UserRepository userRepository;
     private final FavorietRepository favorietRepository;
+    private final CommentReposity commentReposity;
     public PostDocument insert(PostDocument postDocument) {
         if(postDocument.getImages() != null) {
             List<Images> images = new ArrayList<>();
@@ -66,5 +62,38 @@ public class PostsService {
             }
         });
         return postRelations;
+    }
+
+    public List<PostRelation> getReels(String userid) {
+        List<PostDocument> posts = postsRepository.findByNotUseridAndSrcNotNull(userid);
+        List<PostRelation> postRelations = new ArrayList<>();
+        for(PostDocument post: posts) {
+            PostRelation postRelation = new PostRelation();
+            postRelation.setPost(post);
+            postRelation.setUser(userRepository.findOneById(post.getUserid()));
+            postRelation.setFavorites(favorietRepository.findByPostid(post.getId()));
+            postRelations.add(postRelation);
+        }
+        return postRelations;
+    }
+
+    public void edit(PostDocument postDocument) {
+        postsRepository.save(postDocument);
+    }
+
+    public void delete(String id) {
+        PostDocument post = postsRepository.findById(id).get();
+        for(Images image : post.getImages()) {
+            imagesRepository.deleteById(image.getId());
+        }
+        favorietRepository.deleteByPostid(post.getId());
+        commentReposity.deleteByPostid(post.getId());
+        postsRepository.deleteById(post.getId());
+    }
+
+    public void savePost(String postid, String userid) {
+        PostDocument post = postsRepository.findById(postid).get();
+        post.getIds().add(userid);
+        postsRepository.save(post);
     }
 }

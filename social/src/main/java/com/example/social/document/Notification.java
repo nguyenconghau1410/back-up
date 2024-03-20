@@ -9,10 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatNotification {
+public class Notification {
     private String id;
-    private String senderId;
-    private String recipientId;
+    private String userid;
+    private UserDocument user;
     private String content;
-    private String src;
+    private String timestamp;
+    private boolean read = false;
 }

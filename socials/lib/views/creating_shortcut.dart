@@ -43,6 +43,18 @@ class _CreatingShortCutState extends State<CreatingShortCut> {
   }
 
   Future<void> _createShortcut() async {
+    if(_file!.lengthSync() > 30 * 1024 * 1024) {
+      Fluttertoast.showToast(
+          msg: "Kích thước video lớn hơn 25MB, hãy chọn một video khác",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.grey,
+          textColor: Colors.white,
+          fontSize: 16
+      );
+      return;
+    }
     Fluttertoast.showToast(
         msg: "Đang lưu thướt phim của bạn",
         toastLength: Toast.LENGTH_SHORT,
@@ -53,10 +65,24 @@ class _CreatingShortCutState extends State<CreatingShortCut> {
         fontSize: 16
     );
     Future.delayed(const Duration(seconds: 2)).then((_) => Get.offAll(() => const DashBoard()));
-    String? src = await FileUpload.uploadImage(_file!, "shortcut", "${Utils.user!.name}-${DateTime.now().toString()}");
-    Post post = Post(null, Utils.user!.id!, _controller.text.trim(),
-        "Public", src, DateTime.now().toString(), null, "SHORTCUT", null, null);
-    await APIPosts.createPost(post, "Thướt phim");
+    // String? src = await FileUpload.uploadImage(_file!, "shortcut", "${Utils.user!.name}-${DateTime.now().toString()}");
+    String? src = await FileUpload.uploadVideoToB2Storage(_file!);
+    if(src != null) {
+      Post post = Post(null, Utils.user!.id!, _controller.text.trim(),
+          "Public", src, DateTime.now().toString(), null, "SHORTCUT", null, null, []);
+      await APIPosts.createPost(post, "Thướt phim");
+    }
+    else {
+      Fluttertoast.showToast(
+          msg: "Đã gặp lỗi không thể tạo thước phim",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.grey,
+          textColor: Colors.white,
+          fontSize: 16
+      );
+    }
   }
 
   @override
@@ -134,6 +160,7 @@ class _CreatingShortCutState extends State<CreatingShortCut> {
                         actions: [
                           TextButton(
                             onPressed: () {
+                              Get.back();
                              _createShortcut();
                             },
                             child: const Text("Xác nhận"),

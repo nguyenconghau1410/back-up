@@ -30,26 +30,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue
       ),
-      home: FutureBuilder(
-        future: LocalStorage.getUser(),
-        builder: (context, snapshot) {
-          final data = snapshot.data;
-          if(snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(),);
-          }
-          else if(snapshot.hasError) {
-            return const Center(child: CircularProgressIndicator(),);
-          }
-          else {
-            if(data == null) {
-              return const LoginScreen();
-            }
-            else {
-              return const DashBoard();
-            }
-          }
-        },
-      ),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -67,8 +48,14 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     Future.delayed(
         const Duration(seconds: 3),
-            () {
-          Get.to(() => LoginScreen());
+            () async {
+              String? email = await LocalStorage.getUser();
+              if(email == null) {
+                Get.to(() => const LoginScreen());
+              }
+              else {
+                Get.to(() => const DashBoard());
+              }
         }
     );
     return Scaffold(
@@ -82,7 +69,7 @@ class _SplashScreenState extends State<SplashScreen> {
               bottomRight: Radius.circular(20)
           ),
           child: Image.asset(
-            "images/image1.jpg",
+            "images/znet.jpg",
             width: 196,
             height: 209,
           ),

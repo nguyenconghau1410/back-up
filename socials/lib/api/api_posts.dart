@@ -259,4 +259,109 @@ class APIPosts {
       rethrow;
     }
   }
+  static Future<bool> editingPost(Post post) async {
+    try {
+      final response = await http.put(
+        Uri.parse("${Utils.baseURL}/posts/editing-post"),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: json.encode(post.toJson())
+      );
+      if(response.statusCode == 200) {
+        return true;
+      }
+      else {
+        print(response.statusCode);
+        return false;
+      }
+    }
+    catch(e) {
+      rethrow;
+    }
+  }
+  static Future<bool> deletePost(String postId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("${Utils.baseURL}/posts/delete-post").replace(queryParameters: {"postId": postId})
+      );
+      if(response.statusCode == 200) {
+        return true;
+      }
+      else {
+        print(response.statusCode);
+        return false;
+      }
+    }
+    catch(e) {
+      rethrow;
+    }
+  }
+  static Future<List<PostRelation>> getReels(String userid) async {
+    try {
+      final response = await http.get(
+        Uri.parse("${Utils.baseURL}/posts/reels").replace(queryParameters: {"userid": userid})
+      );
+      if(response.statusCode == 200) {
+        List<dynamic> data = json.decode(utf8.decode(response.bodyBytes));
+        List<PostRelation> posts = [];
+        data.forEach((element) {
+          List<dynamic> dataF = element['favorites'];
+          List<Favorite> favorites = [];
+          dataF.forEach((e) {
+            favorites.add(Favorite.fromJson(e));
+          });
+          PostRelation postRelation = PostRelation(
+            User.fromJson(element['user']),
+            Post.fromJson(element['post']),
+            favorites
+          );
+          posts.add(postRelation);
+        });
+        return posts;
+      }
+      else {
+        return [];
+      }
+    }
+    catch(e) {
+      rethrow;
+    }
+  }
+  static Future<void> report(String postid, String userid) async {
+    try {
+      final response = await http.put(
+        Uri.parse("${Utils.baseURL}/posts/report").replace(queryParameters: {
+          "postid": postid,
+          "userid": userid
+        })
+      );
+      if(response.statusCode == 200) {
+        Fluttertoast.showToast(
+            msg: "Đã báo xấu bài viết thành công !",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.grey,
+            textColor: Colors.white,
+            fontSize: 16
+        );
+      }
+      else {
+        print(response.statusCode);
+        Fluttertoast.showToast(
+            msg: "Đã có lỗi xảy ra, hãy thử lại !",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.grey,
+            textColor: Colors.white,
+            fontSize: 16
+        );
+      }
+    }
+    catch(e) {
+      rethrow;
+    }
+  }
 }

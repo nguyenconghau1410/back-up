@@ -22,7 +22,6 @@ public class CommentAPI {
     @GetMapping("get-comments")
     public ResponseEntity<List<CommentDocument>> findByPostid(@RequestParam String postid) {
         List<CommentDocument> comments = commentService.findByPostid(postid);
-        Collections.reverse(comments);
         return ResponseEntity.ok(comments);
     }
     @PostMapping("/add-node-1")

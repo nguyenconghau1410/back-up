@@ -14,7 +14,7 @@ import 'package:stomp_dart_client/stomp_frame.dart';
 import '../models/user.dart';
 import '../utils/notification_service.dart';
 class ConnectWebSocket {
-  static String base_uri = "ws://192.168.2.10:8080";
+  static String base_uri = "ws://192.168.9.7:8080";
   static late StompClient stompClient;
   static void connectWS(String? email) async {
     String url = '$base_uri/ws/websocket';
@@ -93,6 +93,7 @@ class ConnectWebSocket {
     User sender = User.fromJson(mp['sender']);
     User recipient = User.fromJson(mp['recipient']);
     String type = mp['type'];
+    NotificationService.initializeNotification();
     NotificationService.showNotificationCall(sender, recipient, sender.id! + recipient.id!, type);
   }
 }

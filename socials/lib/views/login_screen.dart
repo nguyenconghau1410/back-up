@@ -64,13 +64,22 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: 285,
+            const SizedBox(height: 80,),
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight:  Radius.circular(50),
+                bottomLeft:  Radius.circular(50),
+                bottomRight:  Radius.circular(20)
+              ),
               child: Image.asset(
-                "images/login.jpg",
+                "images/znet.jpg",
+                width: 200,
+                height: 200,
+                fit: BoxFit.fill,
               ),
             ),
+            const SizedBox(height: 30,),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Container(

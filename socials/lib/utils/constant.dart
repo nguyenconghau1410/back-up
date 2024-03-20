@@ -9,7 +9,7 @@ import '../models/following.dart';
 import '../models/user.dart';
 
 class Utils {
-  static String baseURL = "http://192.168.2.10:8080/api/v1";
+  static String baseURL = "http://192.168.9.7:8080/api/v1";
   static User? user;
   static List<String> list() {
     return [
@@ -42,5 +42,9 @@ class Utils {
   static String formatDateToddmmyy(String date) {
     List<String> text = date.split(" ");
     return text.first;
+  }
+  static String formatDateTohhss(String date) {
+    List<String> text = date.split(" ");
+    return text[1].substring(0, 5);
   }
 }

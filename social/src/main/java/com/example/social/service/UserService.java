@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -21,11 +20,13 @@ public class UserService {
     private final FollowingService followingService;
     public UserDocument login(UserDocument userDocument) {
         UserDocument user = userRepository.findOneByEmail(userDocument.getEmail());
-        if(user.getPassword().equals(userDocument.getPassword())) {
-            user.setTokenDevice(userDocument.getTokenDevice());
-            userRepository.save(user);
-            return user;
-        }
+        if(user != null)
+            if(user.getPassword().equals(userDocument.getPassword())) {
+                user.setTokenDevice(userDocument.getTokenDevice());
+                userRepository.save(user);
+                user.setPassword("");
+                return user;
+            }
         return null;
     }
 
@@ -47,6 +48,10 @@ public class UserService {
         userRepository.save(user);
     }
     public UserDocument insert(UserDocument userDocument) {
+        UserDocument user = userRepository.findOneByEmail(userDocument.getEmail());
+        if(user != null) {
+            return null;
+        }
         RoleDocument role = roleRepository.findOneByCode("USER");
         userDocument.setRole(role);
         userDocument.setStatus(Status.OFFLINE);
@@ -79,5 +84,30 @@ public class UserService {
     }
     public List<UserDocument> findByNameContaining(String keyword) {
         return userRepository.findByNameContaining(keyword);
+    }
+
+    public List<UserDocument> recommendUser(String userid) {
+        List<FollowingDocument> follows = followingService.findByUserid(userid);
+        Set<UserDocument> users = new HashSet<>();
+        Set<FollowingDocument> sets = new HashSet<>();
+        for(FollowingDocument follow : follows) {
+            List<FollowingDocument> other = followingService.findByUserid(follow.getFollowId());
+            sets.addAll(other);
+        }
+        for (FollowingDocument set : sets) {
+            if(!set.getFollowId().equals(userid)) {
+                users.add(userRepository.findById(set.getFollowId()).get());
+            }
+        }
+        List<UserDocument> finalList = new ArrayList<>();
+        for(UserDocument set : users) {
+            for(FollowingDocument follow : follows) {
+                if(set.getId().equals(follow.getFollowId())) {
+                    finalList.add(set);
+                }
+            }
+        }
+        users.removeAll(finalList);
+        return users.stream().toList();
     }
 }

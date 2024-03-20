@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:socials/api/api_notification.dart';
 import 'package:socials/api/api_posts.dart';
 import 'package:socials/models/images.dart';
+import 'package:socials/models/notification_be.dart';
 import 'package:socials/models/story.dart';
 import 'package:socials/models/story_relation.dart';
 import 'package:socials/services/post_controller.dart';
 import 'package:socials/utils/constant.dart';
 import 'package:socials/views/display_story.dart';
 import 'package:socials/views/messenger_screen.dart';
+import 'package:socials/views/notification_screen.dart';
 import 'package:socials/views/others_profile.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
 import '../../models/favorite.dart';
 import '../../models/post_relation.dart';
@@ -47,6 +51,22 @@ class _HomePageState extends State<HomePage> {
     postControllers = list;
   }
 
+  Future<void> pushNotificationToOther(String userid) async {
+    NotificationBE notificationBE = NotificationBE(null, userid, Utils.user, "${Utils.user!.title} đã thích bài viết của bạn",
+        DateTime.now().toString(), false);
+    await APINotification.addNotification(notificationBE);
+  }
+
+  Future<void> pushNotificationToAdmin(String userid, String postid) async {
+    NotificationBE notificationBE = NotificationBE(null, userid, null, "Bài viết có id: $postid có nhiều lượt báo cáo, hãy kiểm tra xem.",
+        DateTime.now().toString(), false);
+    await APINotification.addNotification(notificationBE);
+  }
+
+  Future<void> report(String postid) async {
+    await APIPosts.report(postid, Utils.user!.id!);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,7 +85,6 @@ class _HomePageState extends State<HomePage> {
                     return const Center(child: CircularProgressIndicator(),);
                   }
                   else if(snapshot.hasError) {
-                    print("cc");
                     return const Center(child: CircularProgressIndicator(),);
                   }
                   else {
@@ -93,6 +112,7 @@ class _HomePageState extends State<HomePage> {
                   return const Center(child: CircularProgressIndicator(),);
                 }
                 else if(snapshot.hasError) {
+                  print(snapshot.error);
                   return const Center(child: CircularProgressIndicator(),);
                 }
                 else {
@@ -129,7 +149,12 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Text("Znet", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 32, fontFamily: "Pacifico"),),
           Expanded(child: Container()),
-          const Icon(Icons.favorite_outline_rounded, size: 30,),
+          InkWell(
+            onTap: () {
+              Get.to(() => const NotificationScreen());
+            },
+            child: const Icon(Icons.favorite_outline_rounded, size: 30,),
+          ),
           const SizedBox(width: 25,),
           InkWell(
             onTap: () {
@@ -143,7 +168,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
   Widget _buildPost(PostController post) {
-    return Container(
+    bool flag = false;
+    post.postRelation!.post!.ids!.forEach((element) {
+      if(element == Utils.user!.id) {
+        flag = true;
+      }
+    });
+    return !flag ? Container(
       decoration: const BoxDecoration(
           border: Border(
             top: BorderSide(
@@ -187,7 +218,66 @@ class _HomePageState extends State<HomePage> {
                   child: Text(post.postRelation!.user!.name!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),),
                 ),
                 Expanded(child: Container()),
-                const Icon(Icons.more_vert, color: Colors.white, size: 24,)
+                InkWell(
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            backgroundColor: Colors.black,
+                            shape: Border.all(
+                                color: Colors.grey.withOpacity(0.5)
+                            ),
+                            title: const Center(child: Text('Thêm', style: TextStyle(color: Colors.white),)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  title: const Row(
+                                    children: [
+                                      Icon(Icons.info, color: Colors.white,),
+                                      SizedBox(width: 20,),
+                                      Text("Báo xấu", style: TextStyle(color: Colors.white),)
+                                    ],
+                                  ),
+                                  onTap: () {
+                                     Get.back();
+                                     showDialog(
+                                         context: context,
+                                         builder: (context) => AlertDialog(
+                                           actions: [
+                                             TextButton(
+                                               onPressed: () {
+                                                 Get.back();
+                                                 report(post.postRelation!.post!.id!);
+                                                 if(post.postRelation!.post!.ids!.length + 1 >= 3) {
+                                                   pushNotificationToAdmin("65fafb24f990482dbe723f04", post.postRelation!.post!.id!);
+                                                 }
+                                               },
+                                               child: const Text("Xác nhận"),
+                                             ),
+                                             TextButton(
+                                               onPressed: () {
+                                                 Get.back();
+                                               },
+                                               child: const Text("Đóng"),
+                                             )
+                                           ],
+                                           title: const Text("Thông báo"),
+                                           content: const Text("Bạn chắc chắn muốn báo xấu bài viết này !"),
+                                           contentPadding: const EdgeInsets.all(20),
+                                         )
+                                     );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                    );
+                  },
+                  child: const Icon(Icons.more_vert, color: Colors.white, size: 24,),
+                )
               ],
             ),
             const SizedBox(height: 30,),
@@ -223,6 +313,11 @@ class _HomePageState extends State<HomePage> {
                           () => InkWell(
                         onTap: () {
                           post.onChanged(Favorite(null, Utils.user!.id!, post.postRelation!.post!.id));
+                          if(Utils.user!.id != post.postRelation!.user!.id) {
+                            if(!post.clicked.value) {
+                              pushNotificationToOther(post.postRelation!.user!.id!);
+                            }
+                          }
                         },
                         child: post.clicked.value
                             ? const Icon(Icons.favorite, color: Colors.red, size: 24,)
@@ -250,14 +345,11 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-    );
+    ) : Container();
   }
   Widget _buildListImages(List<Images> list) {
-    return ListView.builder(
-      shrinkWrap: true,
-      scrollDirection: Axis.horizontal,
-      itemCount: list.length,
-      itemBuilder: (context, index) {
+    return PageView(
+      children: List.generate(list.length, (index) {
         int cnt = list.length;
         int i = index + 1;
         return InkWell(
@@ -278,7 +370,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         );
-      },
+      })
     );
   }
   Widget _buildImage(Images images) {

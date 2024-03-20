@@ -37,14 +37,14 @@ class FileUpload {
   static Future<Map<String, dynamic>> authorizeAccount() async {
     try {
       String apiUrl = 'https://api.backblazeb2.com/b2api/v3/b2_authorize_account';
-      String applicationKeyId = '005fff7761462010000000001';
-      String applicationKey = 'K0051PNGdx1iO5kenEk4ba3IcdhozRU';
+      String applicationKeyId = '005fff7761462010000000002';
+      String applicationKey = 'K005NTQqU617o6reY4UWaYGlG/qu4Yo';
 
       String credentials = 'Basic ${base64.encode(utf8.encode('$applicationKeyId:$applicationKey'))}';
       final response = await http.get(
         Uri.parse(apiUrl),
         headers: {
-          'Authorization': '$credentials',
+          'Authorization': credentials,
           'Content-Type': 'application/json'
         }
       );
@@ -64,7 +64,7 @@ class FileUpload {
     try {
       Map<String, dynamic> mp = await authorizeAccount();
       String apiUrl = mp['apiInfo']['storageApi']['apiUrl'];
-      String bucketId = "bf5fefa70776a13486d20011";
+      String bucketId = "3f5fff27571641d486e20011";
       String authorizeToken = mp['authorizationToken'];
       final response = await http.get(
           Uri.parse("$apiUrl/b2api/v3/b2_get_upload_url").replace(queryParameters: {"bucketId": bucketId}),
@@ -85,13 +85,14 @@ class FileUpload {
       rethrow;
     }
   }
-  static Future<void> uploadVideoToB2Storage(File file) async {
+  static Future<String?> uploadVideoToB2Storage(File file) async {
     Map<String, dynamic> mp = await b2GetUrlUpload();
     String url = mp['uploadUrl'];
     String token = mp['authorizationToken'];
-    String bucketId = 'bf5fefa70776a13486d20011';
+    String bucketId = '3f5fff27571641d486e20011';
     String fileName = file.path.split('/').last;
     List<int> fileBytes = await file.readAsBytes();
+    String rootUrl = "https://f005.backblazeb2.com/b2api/v1/b2_download_file_by_id?fileId=";
     final response = await http.post(
       Uri.parse(url),
         headers: {
@@ -104,10 +105,11 @@ class FileUpload {
       body: fileBytes
     );
     if (response.statusCode == 200) {
-      print(json.decode(response.body));
-      print('Upload successful!');
+      String fileId = json.decode(response.body)['fileId'];
+      return rootUrl + fileId;
     } else {
       print('Failed to upload file. Status code: ${response.statusCode}');
+      return null;
     }
 
   }
